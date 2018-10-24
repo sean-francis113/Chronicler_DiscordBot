@@ -21,6 +21,7 @@ async def showHelp(message):
   helpString_SectionFour = ('!c ignore - Tells The Chronicler to Ignore this message. Can be used to send a message that should not be recorded by The Chronicler.\n'
                 '!c ignore_user <User Name> - Adds the specified <User Name> to the list of users The Chronicler will ignore. Any messages by the user will not be recorded by The Chronicler. This can also be used to ignore multiple users at once using the \'|\' seperator. Example: !c ignore_user Miggnor / !c ignore_user Miggnor | Calli | Billi_Bob\n'
                 '!c get_link - This will tell The Chronicler to post a direct link to your Chronicle.\n'
+                '!c stats = This will tell The Chronicler to post your channel\'s settings.\n'
                 '!c blacklist - This will tell The Chronicler to completely remove this channel and its Chronicle from its database. BE CAREFUL: The moment you hit Enter and confirm it, The Chronicler will irreversably delete all record of the Chronicle from the site and nothing else in the blacklisted channel will be recorded ever again!\n'
                 '!c create_channel <Options> - Creates a new channel in the server set up for The Chronicler. <Options> are optional (if not provided, it is set up for the default values). <Options> must be formatted as follows (without the quotes), seperated by a semicolon (;):\n'
                 '* \'channelName=<New Channel Name>\' (What the new channel will be named) (Default:<Your UserName>\'s Chronicle)'
@@ -76,13 +77,67 @@ async def addWarning(message, args):
 async def removeWarning(message, args):
   await client.send_message(message.channel, "<Insert Remove Warning Message Here>")
 
-async def createChroniclerChannel(message, args):
+async def createChroniclerChannel(message):
   #Parse out options, if any
-  #Set Variables According to Options
+  isPrivate = False
+  dict_keys = ['word', 'replacement']
+  keywords = []
+  warnings = ''
+  ignoredUsers = [ '' ]
+  soleOwnership = True
+  everyone_perms = discord.Permissions().none()
+  user_perms = discord.Permissions().all()
+  
+  channelOptionsStr = message.content.replace('!c create_channel ', '')
+  if(channelOptionsStr.find('=') != -1):
+    channelOptionsStr = channelOptionsStr.replace('; ', ';')
+    channelOptionsArr = channelOptionsStr.split(';')
+    for option in channelOptionsArr:
+      if(option.startswith('isPrivate=')):
+        value = option.replace('isPrivate=', '')
+        if(value.find('true') != -1 or value.find('True') != -1):
+          isPrivate = True
+      elif(option.startswith('keyword=')):
+        value = option.replace('keyword=', '')
+        keywordValues = value.split('|')
+        finalCombination = [keywordValues[0].strip(), keywordValues[1].strip()]
+        keywords.append(dict(zip(dict_keys, finalCombination)))
+      elif(option.startswith('warnings=')):
+        value = option.replace('warnings=', '')
+        warnings = value
+      elif(option.startswith('ignoreUsers=')):
+        value = option.replace('ignoreUsers=', '')
+        usersFound = value.split('|')
+        usersInServer = client.get_all_members()
+        for user in usersFound:
+          strippedUser = user.strip()
+          for serverUser in usersInServer:
+            if serverUser.nick == strippedUser or serverUser.name == strippedUser:
+              if(ignoredUsers[0] == ''):
+                ignoredUsers[0] == serverUser.id
+              else:
+                ignoredUsers.append(serverUser.id)
+      elif(option.startswith('soleOwnership=')):
+        value = option.replace('soleOwnership=', '')
+        if(value.find('false') != -1 or value.find('False') != -1):
+          everyone_perms = discord.Permissions().all()
+
+  keywordString = ''
+  warningString = ''
+  if(len(keywords) == 0):
+    keywordString = 'None'
+  else:
+    for kword in keywords:
+      keywordString += kword['word']
+
+  if(len(warnings) == 0):
+    warningString = 'None'
+
+  await client.send_message(message.channel, "Created new channel with these settings:\n\nisPrivate=" + str(isPrivate) + "\nkeywords=" + keywordString + "\nwarnings=" + warningString + "\nsoleOwnership=" + str(soleOwnership)) 
+
   #Create New Channel
   #Send Welcome and Help Messages into New Channel
   #Insert New Channel Data into Database
-  pass
 
 async def sendIgnoreMessage(message):
   await client.send_message(message.channel, "The Above Message Will Be Ignored By Me!")
@@ -92,6 +147,9 @@ async def addUserToIgnoreList(message, args):
 
 async def getChronicle(message):
   await client.send_message(message.channel, "<Insert Chronicle Link Here>")
+
+async def displayChannelStats(message):
+  await client.send_message(message.channel, "<Insert Stats Message Here>")
 
 async def blacklistChronicle(message):
   await client.send_message(message.channel, "<Insert Blacklist Message Here>")
@@ -141,7 +199,7 @@ async def on_message(message):
       elif(args[1] == 'remove_warning'):
         await removeWarning(message)
       elif(args[1] == 'create_channel'):
-        await createChroniclerChannel(message, args)
+        await createChroniclerChannel(message)
       elif(args[1] == 'ignore'):
         await sendIgnoreMessage(message)
       elif(args[1] == 'ignore_user'):
@@ -150,6 +208,8 @@ async def on_message(message):
         await getChronicle(message)
       elif(args[1] == 'blacklist'):
         await blacklistChronicle(message)
+      elif(args[1] == 'stats'):
+        await displayChannelStats(message)
       else:
         await postInvalidComment(message)
     else:
