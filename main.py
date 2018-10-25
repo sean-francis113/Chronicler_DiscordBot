@@ -79,20 +79,50 @@ async def removeWarning(message, args):
 
 async def createChroniclerChannel(message):
   #Parse out options, if any
+  channelName = ''
   isPrivate = False
   dict_keys = ['word', 'replacement']
   keywords = []
   warnings = ''
   ignoredUsers = [ '' ]
   soleOwnership = True
-  everyone_perms = discord.Permissions().none()
-  user_perms = discord.Permissions().all()
+  everyone_perms = discord.PermissionOverwrite(
+    create_instant_invite=False, 
+    manage_channels=False, 
+    manage_permissions=False, 
+    manage_webhooks=False, 
+    read_message_history=True, 
+    read_messages=True, 
+    send_messages=False, 
+    manage_messages=False, 
+    send_tts_messages=False, 
+    embed_links=False, 
+    attach_files=False, 
+    mention_everyone=False
+    )
+  user_perms = discord.PermissionOverwrite(
+    create_instant_invite=True, 
+    manage_channels=True, 
+    manage_permissions=True, 
+    manage_webhooks=True, 
+    read_message_history=True, 
+    read_messages=True,
+    send_messages=True, 
+    manage_messages=True, 
+    send_tts_messages=True, 
+    embed_links=True, 
+    attach_files=True, 
+    mention_everyone=True
+    )
   
   channelOptionsStr = message.content.replace('!c create_channel ', '')
   if(channelOptionsStr.find('=') != -1):
     channelOptionsStr = channelOptionsStr.replace('; ', ';')
     channelOptionsArr = channelOptionsStr.split(';')
     for option in channelOptionsArr:
+      if(option.startswith('channelName=')):
+        value = option.replace('channelName=', '')
+        channelName = value
       if(option.startswith('isPrivate=')):
         value = option.replace('isPrivate=', '')
         if(value.find('true') != -1 or value.find('True') != -1):
@@ -120,7 +150,20 @@ async def createChroniclerChannel(message):
       elif(option.startswith('soleOwnership=')):
         value = option.replace('soleOwnership=', '')
         if(value.find('false') != -1 or value.find('False') != -1):
-          everyone_perms = discord.Permissions().all()
+          everyone_perms = discord.Permissions(
+            create_instant_invite=True, 
+            manage_channels=True, 
+            manage_permissions=True, 
+            manage_webhooks=True, 
+            read_message_history=True, 
+            read_messages=True,
+            send_messages=True, 
+            manage_messages=True, 
+            send_tts_messages=True, 
+            embed_links=True, 
+            attach_files=True, 
+            mention_everyone=True
+            )
 
   keywordString = ''
   warningString = ''
@@ -128,15 +171,25 @@ async def createChroniclerChannel(message):
     keywordString = 'None'
   else:
     for kword in keywords:
-      keywordString += kword['word']
+      keywordString += kword['word'] + ', '
 
   if(len(warnings) == 0):
     warningString = 'None'
 
-  await client.send_message(message.channel, "Created new channel with these settings:\n\nisPrivate=" + str(isPrivate) + "\nkeywords=" + keywordString + "\nwarnings=" + warningString + "\nsoleOwnership=" + str(soleOwnership)) 
+  if(channelName == ''):
+    channelName = message.author.name + '\'s Chronicle'
 
-  #Create New Channel
+  everyone = discord.ChannelPermissions(target=message.server.default_role, overwrite=everyone_perms)
+  channelCreator = discord.ChannelPermissions(target=message.author, overwrite=user_perms)
+  chronicler = discord.ChannelPermissions(target=client.user, overwrite=user_perms)
+  newChannel = await client.create_channel(message.server, channelName, everyone, channelCreator)
+
+  await client.send_message(message.channel, "Created new channel with these settings:\n\nchannelName=" + channelName + "\nisPrivate=" + str(isPrivate) + "\nkeywords=" + keywordString + "\nwarnings=" + warningString + "\nsoleOwnership=" + str(soleOwnership) + "\n\nMake sure that the channel's permissions are correct. The Chronicler is not yet able to access every single permission yet.") 
+
   #Send Welcome and Help Messages into New Channel
+  openingMessage = await client.send_message(newChannel, 'Welcome to your new channel!')
+  await showWelcome(openingMessage)
+  await showHelp(openingMessage)
   #Insert New Channel Data into Database
 
 async def sendIgnoreMessage(message):
