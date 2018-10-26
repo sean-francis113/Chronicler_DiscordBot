@@ -29,8 +29,11 @@ async def showHelp(message):
                 '* \'keyword=<Keyword> | <ReplacementString>\' (Set up Keywords and Replacement Strings) (Can Be Used Multiple Times) (Default: None)\n'
                 '* \'warnings=<Warnings>\' (Create List of Warnings) (Default: None)\n'
                 '* \'ignoreUsers=<User Name> | <User Name>...\' (Set up List of Ignored Users) (Default: None)\n'
-                '* \'soleOwnership=true\' or \'soleOwnership=false\' (If true, the user who entered the command will be the only one to have permissions for the new channel) (Default: soleOwnership=true)')
-  helpString_SectionFive = ('Example: !c create_channel isPrivate=false; keyword=-dual strike | Baelic swings both of his blades; keyword=-magic_missle | Gilla casts magic missle; warnings=Sexual Content, Drug and Alchohol Reference, Violence; ignoreUsers=Miggnor | Calli | Billi_Bob; soleOwnership=true')
+                '* \'soleOwnership=true\' or \'soleOwnership=false\' (If true, the user who entered the command will be the only one to have permissions for the new channel) (Default: soleOwnership=true)\n'
+                )
+  helpString_SectionFive = ('* \'showWelcome=true\' or \'showWelcome=false\' (Shows the welcome message once the channel is created) (Default: showWelcome=true)\n'
+                '* \'showHelp=true\' or \'showHelp=false\' (Shows the help message once the channel is created) (Default: showHelp=true)'
+    'Example: !c create_channel isPrivate=false; keyword=-dual strike | Baelic swings both of his blades; keyword=-magic_missle | Gilla casts magic missle; warnings=Sexual Content, Drug and Alchohol Reference, Violence; ignoreUsers=Miggnor | Calli | Billi_Bob; soleOwnership=true')
   
   await client.send_message(message.channel, helpString_SectionOne)
   await client.send_message(message.channel, helpString_SectionTwo)
@@ -114,7 +117,9 @@ async def createChroniclerChannel(message):
     attach_files=True, 
     mention_everyone=True
     )
-  
+  showWelcomeMessage = True
+  showHelpMessage = True
+
   channelOptionsStr = message.content.replace('!c create_channel ', '')
   if(channelOptionsStr.find('=') != -1):
     channelOptionsStr = channelOptionsStr.replace('; ', ';')
@@ -125,7 +130,8 @@ async def createChroniclerChannel(message):
         channelName = value
       if(option.startswith('isPrivate=')):
         value = option.replace('isPrivate=', '')
-        if(value.find('true') != -1 or value.find('True') != -1):
+        value = value.lower()
+        if(value.find('true') != -1):
           isPrivate = True
       elif(option.startswith('keyword=')):
         value = option.replace('keyword=', '')
@@ -149,8 +155,9 @@ async def createChroniclerChannel(message):
                 ignoredUsers.append(serverUser.id)
       elif(option.startswith('soleOwnership=')):
         value = option.replace('soleOwnership=', '')
-        if(value.find('false') != -1 or value.find('False') != -1):
-          everyone_perms = discord.Permissions(
+        value = value.lower()
+        if(value.find('false') != -1):
+          everyone_perms = discord.PermissionOverwrite(
             create_instant_invite=True, 
             manage_channels=True, 
             manage_permissions=True, 
@@ -164,6 +171,16 @@ async def createChroniclerChannel(message):
             attach_files=True, 
             mention_everyone=True
             )
+      elif(option.startswith('showWelcome=')):
+        value = option.replace('showWelcome=', '')
+        value = value.lower()
+        if(value.find('false') != -1):
+          showWelcomeMessage = False
+      elif(option.startswith('showHelp=')):
+        value = option.replace('showHelp=', '')
+        value = value.lower()
+        if(value.find('false') != -1):
+          showHelpMessage = False
 
   keywordString = ''
   warningString = ''
@@ -182,14 +199,18 @@ async def createChroniclerChannel(message):
   everyone = discord.ChannelPermissions(target=message.server.default_role, overwrite=everyone_perms)
   channelCreator = discord.ChannelPermissions(target=message.author, overwrite=user_perms)
   chronicler = discord.ChannelPermissions(target=client.user, overwrite=user_perms)
-  newChannel = await client.create_channel(message.server, channelName, everyone, channelCreator)
 
-  await client.send_message(message.channel, "Created new channel with these settings:\n\nchannelName=" + channelName + "\nisPrivate=" + str(isPrivate) + "\nkeywords=" + keywordString + "\nwarnings=" + warningString + "\nsoleOwnership=" + str(soleOwnership) + "\n\nMake sure that the channel's permissions are correct. The Chronicler is not yet able to access every single permission yet.") 
+  newChannel = await client.create_channel(message.server, channelName, everyone, channelCreator, chronicler)
+
+  await client.send_message(message.channel, "Created new channel with these settings:\n\nchannelName=" + channelName + "\nisPrivate=" + str(isPrivate) + "\nkeywords=" + keywordString + "\nwarnings=" + warningString + "\nsoleOwnership=" + str(soleOwnership) + "\nshowWelcome=" + str(showWelcome) + "\nshowHelp=" + str(showHelp) + "\n\nMake sure that the channel's permissions are correct. The Chronicler is not yet able to access every single permission yet.") 
 
   #Send Welcome and Help Messages into New Channel
-  openingMessage = await client.send_message(newChannel, 'Welcome to your new channel!')
-  await showWelcome(openingMessage)
-  await showHelp(openingMessage)
+  if(showWelcomeMessage == True or showHelpMessage == True):
+    openingMessage = await client.send_message(newChannel, 'Welcome to your new channel!')
+    if(showWelcomeMessage == True):
+      await showWelcome(openingMessage)
+    if(showHelpMessage == True):
+      await showHelp(openingMessage)
   #Insert New Channel Data into Database
 
 async def sendIgnoreMessage(message):
@@ -222,6 +243,11 @@ async def checkIfCanPost(message):
 
 async def postToDatabase(message):
   await client.send_message(message.channel, "Posting Message to Database...")
+
+@client.event
+async def on_channel_delete(channel):
+  #Close Channel (assuming it is not blacklisted)
+  pass
 
 @client.event
 async def on_message(message):
