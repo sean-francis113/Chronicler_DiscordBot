@@ -1,6 +1,8 @@
 import discord
 import os
 from keep_alive import keep_alive
+import mysql.connector
+import datetime
 
 client = discord.Client()
 
@@ -84,10 +86,12 @@ async def createChroniclerChannel(message):
   #Parse out options, if any
   channelName = ''
   isPrivate = False
-  dict_keys = ['word', 'replacement']
+  dict_word_keys = ['word', 'replacement']
   keywords = []
+  hasWarnings = False
   warnings = ''
-  ignoredUsers = [ '' ]
+  dict_user_keys = ['name', 'id']
+  ignoredUsers = []
   soleOwnership = True
   everyone_perms = discord.PermissionOverwrite(
     create_instant_invite=False, 
@@ -137,7 +141,7 @@ async def createChroniclerChannel(message):
         value = option.replace('keyword=', '')
         keywordValues = value.split('|')
         finalCombination = [keywordValues[0].strip(), keywordValues[1].strip()]
-        keywords.append(dict(zip(dict_keys, finalCombination)))
+        keywords.append(dict(zip(dict_word_keys, finalCombination)))
       elif(option.startswith('warnings=')):
         value = option.replace('warnings=', '')
         warnings = value
@@ -148,11 +152,12 @@ async def createChroniclerChannel(message):
         for user in usersFound:
           strippedUser = user.strip()
           for serverUser in usersInServer:
-            if serverUser.nick == strippedUser or serverUser.name == strippedUser:
-              if(ignoredUsers[0] == ''):
-                ignoredUsers[0] == serverUser.id
-              else:
-                ignoredUsers.append(serverUser.id)
+            if serverUser.nick == strippedUser:
+              combination = [serverUser.nick, serverUser.id]
+              ignoredUsers.append(dict(zip(dict_user_keys, combination)))
+            elif serverUser.name == strippedUser:
+              combination = [serverUser.name, serverUser.id]
+              ignoredUsers.append(dict(zip(dict_user_keys, combination)))
       elif(option.startswith('soleOwnership=')):
         value = option.replace('soleOwnership=', '')
         value = value.lower()
@@ -202,7 +207,28 @@ async def createChroniclerChannel(message):
 
   newChannel = await client.create_channel(message.server, channelName, everyone, channelCreator, chronicler)
 
-  await client.send_message(message.channel, "Created new channel with these settings:\n\nchannelName=" + channelName + "\nisPrivate=" + str(isPrivate) + "\nkeywords=" + keywordString + "\nwarnings=" + warningString + "\nsoleOwnership=" + str(soleOwnership) + "\nshowWelcome=" + str(showWelcome) + "\nshowHelp=" + str(showHelp) + "\n\nMake sure that the channel's permissions are correct. The Chronicler is not yet able to access every single permission yet.") 
+  mydb = mysql.connector.connect(
+    host = "localhost",
+    user = os.environ.get("CHRONICLER_DATABASE_USER"),
+    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
+    database = os.environ.get("CHRONICLER_DATABASE_DB")
+  )
+
+  cursor = mydb.cursor()
+
+  cursor.execute("CREATE TABLE " + newChannel.id + "_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)")
+  cursor.execute("CREATE TABLE " + newChannel.id + "_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)")
+  cursor.execute("CREATE TABLE " + newChannel.id + "_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)")
+
+  cursor.execute("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, " + isPrivate + ", " + newChannel.name + ", " + newChannel.id + ", " + message.author + ", " + hasWarnings + ", " + warnings + ", " + datetime.datetime.now() + ")")
+
+  if(len(keywords) > 0):
+    for index in keywords:
+      cursor.execute("INSERT INTO " + newChannel.id + "_keywords (keyword, replacement_string) VALUES (" + index['word'] + ", " + index['replacement'] + ")")
+
+  if(len(ignoredUsers) > 0):
+    for index in ignoredUsers:
+      cursor.execute("INSERT INTO " + newChannel.id + "_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (" + index['name'] + ", " + index['id'] + ")")
 
   #Send Welcome and Help Messages into New Channel
   if(showWelcomeMessage == True or showHelpMessage == True):
@@ -211,22 +237,82 @@ async def createChroniclerChannel(message):
       await showWelcome(openingMessage)
     if(showHelpMessage == True):
       await showHelp(openingMessage)
-  #Insert New Channel Data into Database
+  
+  await client.add_reaction(message, ":thumbup:")
 
-async def sendIgnoreMessage(message):
-  await client.send_message(message.channel, "The Above Message Will Be Ignored By Me!")
+async def sendIgnoreReaction(message):
+  await client.add_reaction(message, ":thumbup:")
 
 async def addUserToIgnoreList(message, args):
-  await client.send_message(message.channel, "<Insert Ignore User Message Here>")
+  channel = message.channel
+  ignoredUsers = []
+  dict_user_keys = ["name", "id"]
+
+  value = option.replace('!c ignoreUsers', '')
+  usersFound = value.split('|')
+  usersInServer = client.get_all_members()
+  for user in usersFound:
+    strippedUser = user.strip()
+    for serverUser in usersInServer:
+      if serverUser.nick == strippedUser:
+        combination = [serverUser.nick, serverUser.id]
+        ignoredUsers.append(dict(zip(dict_user_keys, combination)))
+      elif serverUser.name == strippedUser:
+        combination = [serverUser.name, serverUser.id]
+        ignoredUsers.append(dict(zip(dict_user_keys, combination)))
+  
+  mydb = mysql.connector.connect(
+    host = "localhost",
+    user = os.environ.get("CHRONICLER_DATABASE_USER"),
+    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
+    database = os.environ.get("CHRONICLER_DATABASE_DB")
+  )
+
+  cursor = mydb.cursor()
+
+  for user in ignoredUsers:
+    cursor.execute("INSERT INTO " + channel.id + "_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (" + user.name + ", " + user.id + ")")
 
 async def getChronicle(message):
-  await client.send_message(message.channel, "<Insert Chronicle Link Here>")
+  mydb = mysql.connector.connect(
+    host = "localhost",
+    user = os.environ.get("CHRONICLER_DATABASE_USER"),
+    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
+    database = os.environ.get("CHRONICLER_DATABASE_DB")
+  )
+
+  cursor = mydb.cursor()
+
+  cursor.execute("SELECT is_blackmailed FROM chronicles_info WHERE channel_id=" + message.channel.id)
+
+  retval = cursor.fetchone()
+  
+  if retval['is_blackmailed'] == False:
+    await client.send_message(message.channel, "Link to Your Chronicle: http://chronicler.seanmfrancis.net/chronicle.php?id=" + message.channel.id + "&page=1")
+  else:
+    await client.send_message(message.channel, "This Chronicle has been blacklisted. You cannot get its link ever again.")
 
 async def displayChannelStats(message):
   await client.send_message(message.channel, "<Insert Stats Message Here>")
 
 async def blacklistChronicle(message):
-  await client.send_message(message.channel, "<Insert Blacklist Message Here>")
+  value = message.content.replace("!c blacklist", '')
+  value = value.strip()
+  if value != message.channel.id:
+    await client.send_message(message.channel, "Are you sure you wish to Blacklist this channel? If you do, nothing will ever be recorded from this channel and it will not be seen or accessed on the site! If you are sure about it, type !c blacklist " + message.channel.id)
+  else:
+    mydb = mysql.connector.connect(
+      host = "localhost",
+      user = os.environ.get("CHRONICLER_DATABASE_USER"),
+      passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
+      database = os.environ.get("CHRONICLER_DATABASE_DB")
+    )
+
+    cursor = mydb.cursor()
+
+    cursor.execute("UPDATE chronicles_info SET is_blacklisted = TRUE; WHERE channel_id=" + channel.id")
+
+    await client.add_reaction(message.channel, ":thumbup:")
 
 async def postInvalidComment(message):
   await client.send_message(message.channel, "Did not find a valid command. Type '!c help' for a list of valid commands.")
@@ -239,7 +325,27 @@ def validateUser(message):
   return True
 
 async def checkIfCanPost(message):
-  await client.send_message(message.channel, "Checking if Message Can Be Posted...")
+  mydb = mysql.connector.connect(
+      host = "localhost",
+      user = os.environ.get("CHRONICLER_DATABASE_USER"),
+      passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
+      database = os.environ.get("CHRONICLER_DATABASE_DB")
+    )
+
+    cursor = mydb.cursor()
+
+    cursor.execute("SELECT is_blacklisted,is_closed FROM chronicles_info WHERE channel.id=" + message.channel.id)
+    
+    retval = cursor.fetchone()
+
+    if retval['is_blacklisted'] == False and retval['is_closed'] == False:
+      valid = validateUser(message)
+      if valid == True:
+        return True
+      else:
+        return False
+    else:
+      return False
 
 async def postToDatabase(message):
   await client.send_message(message.channel, "Posting Message to Database...")
@@ -247,7 +353,15 @@ async def postToDatabase(message):
 @client.event
 async def on_channel_delete(channel):
   #Close Channel (assuming it is not blacklisted)
-  pass
+  mydb = mysql.connector.connect(
+    host = "localhost",
+    user = os.environ.get("CHRONICLER_DATABASE_USER"),
+    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
+    database = os.environ.get("CHRONICLER_DATABASE_DB")
+  )
+  cursor = mydb.cursor()
+  cursor.execute("UPDATE chronicles_info SET is_closed = TRUE; WHERE channel_id=" + channel.id)
+
 
 @client.event
 async def on_message(message):
@@ -280,7 +394,7 @@ async def on_message(message):
       elif(args[1] == 'create_channel'):
         await createChroniclerChannel(message)
       elif(args[1] == 'ignore'):
-        await sendIgnoreMessage(message)
+        await sendIgnoreReaction(message)
       elif(args[1] == 'ignore_user'):
         await addUserToIgnoreList(message, args)
       elif(args[1] == 'get_link'):
@@ -288,7 +402,7 @@ async def on_message(message):
       elif(args[1] == 'blacklist'):
         await blacklistChronicle(message)
       elif(args[1] == 'stats'):
-        await displayChannelStats(message)
+        await postChannelStats(message)
       else:
         await postInvalidComment(message)
     else:
