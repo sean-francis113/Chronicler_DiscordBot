@@ -1,355 +1,35 @@
+#Import Statements
 import discord
 import os
-from keep_alive import keep_alive
 import mysql.connector
-import datetime
 
+#From Statements
+from blacklist import *
+from create import *
+from h import *
+from ignore import *
+from keep_alive import keep_alive
+from keywords import *
+from link import *
+from privacy import *
+from record import *
+from stats import *
+from story import *
+from validation import *
+from w import *
+from warning import *
+
+#Setting the Client
 client = discord.Client()
 
-async def showHelp(message):
-  helpString_SectionOne = ('The Chronicler Help Menu:\n\n'
-                '!c - The Command Prefix for all commands into The Chronicler\n\n')
-  helpString_SectionTwo = ('!c welcome - Posts the Welcome Menu into this channel\n'
-                '!c help - Posts the Help Menu into this channel\n'
-                '!c rewrite - The Chronicler will run through all of the messages in this channel and recreate the final Chronicle\n'
-                '!c set_private <true or false> - Sets this channel to \'Private\' (if true) or \'Public\' (if false). Private means that while you will be able to get the links to the Chronicle, it will not be publicly available for viewing online. Essentially, only those with the generated link can view the Chronicle. Public will allow anyone who visits The Chronicler Site to read the Chronicle.\n'
-                '!c add_keyword <Keyword> | <Replacement String> - Adds the specified <Keyword> and its <Replacement String> to the list of Keywords. This will make it so that everytime <Keyword> is in a message, it is replaced by the <Replacement String>. \'|\' is how The Chronicler knows the separation between <Keyword> and <Replacement String> Example: !c add_keyword -dual strike | Baelic swings both of his blades\n'
-                '!c remove_keyword <Keyword> - Removes the specified <Keyword> and its associated <Replacement String> from The Chronicler. Example: !c remove_keyword -dual strike\n')
-  helpString_SectionThree = ('!c close_story - Tells The Chronicler to \'Close\' this channel\'s Chronicle, preventing The Chronicler from EVER writing to it until it is reopened.\n'
-                '!c open_story - Tells The Chronicler to \'Open\' this channel\'s Chronicle, allowing The Chronicler to write to it until it is closed.\n'
-                '!c set_warnings <List of Warnings> - Sets the List of Warnings for the Chronicle. These warnings will be posted at the top of this channel\'s Chronicle, helping make sure readers know what may be in the Chronicle. Example: !c set_warnings Sexual Content, Drug and Alchohol Reference, Violence\n'
-                '!c add_warning <Warning> - Adds the <Warning> to the list of Warnings. Example: !c add_warning Heavy Language\n'
-                '!c remove_warning <Warning> - Removes the Warning from the list of Warnings, if it exists in the list. Example: !c remove_warning Sexual Content\n')
-  helpString_SectionFour = ('!c ignore - Tells The Chronicler to Ignore this message. Can be used to send a message that should not be recorded by The Chronicler.\n'
-                '!c ignore_user <User Name> - Adds the specified <User Name> to the list of users The Chronicler will ignore. Any messages by the user will not be recorded by The Chronicler. This can also be used to ignore multiple users at once using the \'|\' seperator. Example: !c ignore_user Miggnor / !c ignore_user Miggnor | Calli | Billi_Bob\n'
-                '!c get_link - This will tell The Chronicler to post a direct link to your Chronicle.\n'
-                '!c stats = This will tell The Chronicler to post your channel\'s settings.\n'
-                '!c blacklist - This will tell The Chronicler to completely remove this channel and its Chronicle from its database. BE CAREFUL: The moment you hit Enter and confirm it, The Chronicler will irreversably delete all record of the Chronicle from the site and nothing else in the blacklisted channel will be recorded ever again!\n'
-                '!c create_channel <Options> - Creates a new channel in the server set up for The Chronicler. <Options> are optional (if not provided, it is set up for the default values). <Options> must be formatted as follows (without the quotes), seperated by a semicolon (;):\n'
-                '* \'channelName=<New Channel Name>\' (What the new channel will be named) (Default:<Your UserName>\'s Chronicle)'
-                '* \'isPrivate=true\' or \'isPrivate=false\' (Is the Chronicle Private?) (Default: isPrivate=false)\n'
-                '* \'keyword=<Keyword> | <ReplacementString>\' (Set up Keywords and Replacement Strings) (Can Be Used Multiple Times) (Default: None)\n'
-                '* \'warnings=<Warnings>\' (Create List of Warnings) (Default: None)\n'
-                '* \'ignoreUsers=<User Name> | <User Name>...\' (Set up List of Ignored Users) (Default: None)\n'
-                '* \'soleOwnership=true\' or \'soleOwnership=false\' (If true, the user who entered the command will be the only one to have permissions for the new channel) (Default: soleOwnership=true)\n'
-                )
-  helpString_SectionFive = ('* \'showWelcome=true\' or \'showWelcome=false\' (Shows the welcome message once the channel is created) (Default: showWelcome=true)\n'
-                '* \'showHelp=true\' or \'showHelp=false\' (Shows the help message once the channel is created) (Default: showHelp=true)'
-    'Example: !c create_channel isPrivate=false; keyword=-dual strike | Baelic swings both of his blades; keyword=-magic_missle | Gilla casts magic missle; warnings=Sexual Content, Drug and Alchohol Reference, Violence; ignoreUsers=Miggnor | Calli | Billi_Bob; soleOwnership=true')
-  
-  await client.send_message(message.channel, helpString_SectionOne)
-  await client.send_message(message.channel, helpString_SectionTwo)
-  await client.send_message(message.channel, helpString_SectionThree)
-  await client.send_message(message.channel, helpString_SectionFour)
-  await client.send_message(message.channel, helpString_SectionFive)
-
-async def showWelcome(message):
-  welcomeString_SectionOne = ('The Chronicler Says Hello!\n\n'
-                          'The Chronicler is a Discord Server Bot made for Pen and Paper Role Playing Game (PnPRPG) Servers that records all of the messages it sees into an online database. That database is available to view online at chronicler.seanmfrancis.net where the messages are arranged as a novel. From there, you can download not only your own \'Chronicle\', but also any others on the database to read offline and/or later.\n\n')
-  welcomeString_SectionTwo = ('To get started, I suggest blacklisting whichever channel is going to be your general chat or Out of Character Chat (OOC) if any. That way, you are not sending any messages from those channels to the database. Or you can make the channel \'Private\', meaning that there will be data sent to the database, but it will not be publicly viewed. However, you can still view it with a generated link. After that, you can use the \'Create Channel\' command to create a Chronicler channel with pre-set settings. However, it is not necessary to use the \'Create Channel\' command for the Chronicler to record messages. Any channel, as long as it is not blacklisted or closed, will be recorded.')
-  welcomeString_SectionThree = ('Note, though, that The Chronicler only records messages as they are sent, not any messages sent previous to when it was added to the server. It also cannot handle messages editted after recording. In order to catch these special cases, use the \'Rewrite\' command to have The Chronicler rewrite the Chronicle as it is when the command is sent.')
-  welcomeString_SectionFour = ('View the Help Menu (!c help) for more useful commands.\n\nHappy Chronicling!')
-
-  await client.send_message(message.channel, welcomeString_SectionOne)
-  await client.send_message(message.channel, welcomeString_SectionTwo)
-  await client.send_message(message.channel, welcomeString_SectionThree)
-  await client.send_message(message.channel, welcomeString_SectionFour)
-
-async def startRewrite(message):
-  await client.send_message(message.channel, "<Insert Rewrite Message Here>")
-
-async def setPrivacy(message, args):
-  await client.send_message(message.channel, "<Insert Privacy Message Here>")
-
-async def addKeyword(message, args):
-  await client.send_message(message.channel, "<Insert Add Keyword Message Here>")
-
-async def removeKeyword(message, args):
-  await client.send_message(message.channel, "<Insert Remove Keyword Message Here>")
-
-async def closeStory(message):
-  await client.send_message(message.channel, "<Insert Close Story Message Here>")
-
-async def openStory(message):
-  await client.send_message(message.channel, "<Insert Open Story Message Here>")
-
-async def setWarnings(message, args):
-  await client.send_message(message.channel, "<Insert Set Warning Message Here>")
-
-async def addWarning(message, args):
-  await client.send_message(message.channel, "<Insert Add Warning Message Here>")
-
-async def removeWarning(message, args):
-  await client.send_message(message.channel, "<Insert Remove Warning Message Here>")
-
-async def createChroniclerChannel(message):
-  #Parse out options, if any
-  channelName = ''
-  isPrivate = False
-  dict_word_keys = ['word', 'replacement']
-  keywords = []
-  hasWarnings = False
-  warnings = ''
-  dict_user_keys = ['name', 'id']
-  ignoredUsers = []
-  soleOwnership = True
-  everyone_perms = discord.PermissionOverwrite(
-    create_instant_invite=False, 
-    manage_channels=False, 
-    manage_permissions=False, 
-    manage_webhooks=False, 
-    read_message_history=True, 
-    read_messages=True, 
-    send_messages=False, 
-    manage_messages=False, 
-    send_tts_messages=False, 
-    embed_links=False, 
-    attach_files=False, 
-    mention_everyone=False
-    )
-  user_perms = discord.PermissionOverwrite(
-    create_instant_invite=True, 
-    manage_channels=True, 
-    manage_permissions=True, 
-    manage_webhooks=True, 
-    read_message_history=True, 
-    read_messages=True,
-    send_messages=True, 
-    manage_messages=True, 
-    send_tts_messages=True, 
-    embed_links=True, 
-    attach_files=True, 
-    mention_everyone=True
-    )
-  showWelcomeMessage = True
-  showHelpMessage = True
-
-  channelOptionsStr = message.content.replace('!c create_channel ', '')
-  if(channelOptionsStr.find('=') != -1):
-    channelOptionsStr = channelOptionsStr.replace('; ', ';')
-    channelOptionsArr = channelOptionsStr.split(';')
-    for option in channelOptionsArr:
-      if(option.startswith('channelName=')):
-        value = option.replace('channelName=', '')
-        channelName = value
-      if(option.startswith('isPrivate=')):
-        value = option.replace('isPrivate=', '')
-        value = value.lower()
-        if(value.find('true') != -1):
-          isPrivate = True
-      elif(option.startswith('keyword=')):
-        value = option.replace('keyword=', '')
-        keywordValues = value.split('|')
-        finalCombination = [keywordValues[0].strip(), keywordValues[1].strip()]
-        keywords.append(dict(zip(dict_word_keys, finalCombination)))
-      elif(option.startswith('warnings=')):
-        value = option.replace('warnings=', '')
-        warnings = value
-      elif(option.startswith('ignoreUsers=')):
-        value = option.replace('ignoreUsers=', '')
-        usersFound = value.split('|')
-        usersInServer = client.get_all_members()
-        for user in usersFound:
-          strippedUser = user.strip()
-          for serverUser in usersInServer:
-            if serverUser.nick == strippedUser:
-              combination = [serverUser.nick, serverUser.id]
-              ignoredUsers.append(dict(zip(dict_user_keys, combination)))
-            elif serverUser.name == strippedUser:
-              combination = [serverUser.name, serverUser.id]
-              ignoredUsers.append(dict(zip(dict_user_keys, combination)))
-      elif(option.startswith('soleOwnership=')):
-        value = option.replace('soleOwnership=', '')
-        value = value.lower()
-        if(value.find('false') != -1):
-          everyone_perms = discord.PermissionOverwrite(
-            create_instant_invite=True, 
-            manage_channels=True, 
-            manage_permissions=True, 
-            manage_webhooks=True, 
-            read_message_history=True, 
-            read_messages=True,
-            send_messages=True, 
-            manage_messages=True, 
-            send_tts_messages=True, 
-            embed_links=True, 
-            attach_files=True, 
-            mention_everyone=True
-            )
-      elif(option.startswith('showWelcome=')):
-        value = option.replace('showWelcome=', '')
-        value = value.lower()
-        if(value.find('false') != -1):
-          showWelcomeMessage = False
-      elif(option.startswith('showHelp=')):
-        value = option.replace('showHelp=', '')
-        value = value.lower()
-        if(value.find('false') != -1):
-          showHelpMessage = False
-
-  keywordString = ''
-  warningString = ''
-  if(len(keywords) == 0):
-    keywordString = 'None'
-  else:
-    for kword in keywords:
-      keywordString += kword['word'] + ', '
-
-  if(len(warnings) == 0):
-    warningString = 'None'
-
-  if(channelName == ''):
-    channelName = message.author.name + '\'s Chronicle'
-
-  everyone = discord.ChannelPermissions(target=message.server.default_role, overwrite=everyone_perms)
-  channelCreator = discord.ChannelPermissions(target=message.author, overwrite=user_perms)
-  chronicler = discord.ChannelPermissions(target=client.user, overwrite=user_perms)
-
-  newChannel = await client.create_channel(message.server, channelName, everyone, channelCreator, chronicler)
-
-  mydb = mysql.connector.connect(
-    host = "localhost",
-    user = os.environ.get("CHRONICLER_DATABASE_USER"),
-    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-    database = os.environ.get("CHRONICLER_DATABASE_DB")
-  )
-
-  cursor = mydb.cursor()
-
-  cursor.execute("CREATE TABLE " + newChannel.id + "_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)")
-  cursor.execute("CREATE TABLE " + newChannel.id + "_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)")
-  cursor.execute("CREATE TABLE " + newChannel.id + "_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)")
-
-  cursor.execute("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, " + isPrivate + ", " + newChannel.name + ", " + newChannel.id + ", " + message.author + ", " + hasWarnings + ", " + warnings + ", " + datetime.datetime.now() + ")")
-
-  if(len(keywords) > 0):
-    for index in keywords:
-      cursor.execute("INSERT INTO " + newChannel.id + "_keywords (keyword, replacement_string) VALUES (" + index['word'] + ", " + index['replacement'] + ")")
-
-  if(len(ignoredUsers) > 0):
-    for index in ignoredUsers:
-      cursor.execute("INSERT INTO " + newChannel.id + "_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (" + index['name'] + ", " + index['id'] + ")")
-
-  #Send Welcome and Help Messages into New Channel
-  if(showWelcomeMessage == True or showHelpMessage == True):
-    openingMessage = await client.send_message(newChannel, 'Welcome to your new channel!')
-    if(showWelcomeMessage == True):
-      await showWelcome(openingMessage)
-    if(showHelpMessage == True):
-      await showHelp(openingMessage)
-  
-  await client.add_reaction(message, ":thumbup:")
-
-async def sendIgnoreReaction(message):
-  await client.add_reaction(message, ":thumbup:")
-
-async def addUserToIgnoreList(message, args):
-  channel = message.channel
-  ignoredUsers = []
-  dict_user_keys = ["name", "id"]
-
-  value = option.replace('!c ignoreUsers', '')
-  usersFound = value.split('|')
-  usersInServer = client.get_all_members()
-  for user in usersFound:
-    strippedUser = user.strip()
-    for serverUser in usersInServer:
-      if serverUser.nick == strippedUser:
-        combination = [serverUser.nick, serverUser.id]
-        ignoredUsers.append(dict(zip(dict_user_keys, combination)))
-      elif serverUser.name == strippedUser:
-        combination = [serverUser.name, serverUser.id]
-        ignoredUsers.append(dict(zip(dict_user_keys, combination)))
-  
-  mydb = mysql.connector.connect(
-    host = "localhost",
-    user = os.environ.get("CHRONICLER_DATABASE_USER"),
-    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-    database = os.environ.get("CHRONICLER_DATABASE_DB")
-  )
-
-  cursor = mydb.cursor()
-
-  for user in ignoredUsers:
-    cursor.execute("INSERT INTO " + channel.id + "_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (" + user.name + ", " + user.id + ")")
-
-async def getChronicle(message):
-  mydb = mysql.connector.connect(
-    host = "localhost",
-    user = os.environ.get("CHRONICLER_DATABASE_USER"),
-    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-    database = os.environ.get("CHRONICLER_DATABASE_DB")
-  )
-
-  cursor = mydb.cursor()
-
-  cursor.execute("SELECT is_blackmailed FROM chronicles_info WHERE channel_id=" + message.channel.id)
-
-  retval = cursor.fetchone()
-  
-  if retval['is_blackmailed'] == False:
-    await client.send_message(message.channel, "Link to Your Chronicle: http://chronicler.seanmfrancis.net/chronicle.php?id=" + message.channel.id + "&page=1")
-  else:
-    await client.send_message(message.channel, "This Chronicle has been blacklisted. You cannot get its link ever again.")
-
-async def displayChannelStats(message):
-  await client.send_message(message.channel, "<Insert Stats Message Here>")
-
-async def blacklistChronicle(message):
-  value = message.content.replace("!c blacklist", '')
-  value = value.strip()
-  if value != message.channel.id:
-    await client.send_message(message.channel, "Are you sure you wish to Blacklist this channel? If you do, nothing will ever be recorded from this channel and it will not be seen or accessed on the site! If you are sure about it, type !c blacklist " + message.channel.id)
-  else:
-    mydb = mysql.connector.connect(
-      host = "localhost",
-      user = os.environ.get("CHRONICLER_DATABASE_USER"),
-      passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-      database = os.environ.get("CHRONICLER_DATABASE_DB")
-    )
-
-    cursor = mydb.cursor()
-
-    cursor.execute("UPDATE chronicles_info SET is_blacklisted = TRUE; WHERE channel_id=" + channel.id")
-
-    await client.add_reaction(message.channel, ":thumbup:")
-
+#Post a Message Telling the User They Entered an Invalid Command
+#message: The Message the User Sent.
 async def postInvalidComment(message):
   await client.send_message(message.channel, "Did not find a valid command. Type '!c help' for a list of valid commands.")
 
-def validateUser(message):
-  ignoredUsers = { client.user }
-  for user in ignoredUsers:
-    if message.author == user:
-      return False
-  return True
-
-async def checkIfCanPost(message):
-  mydb = mysql.connector.connect(
-      host = "localhost",
-      user = os.environ.get("CHRONICLER_DATABASE_USER"),
-      passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-      database = os.environ.get("CHRONICLER_DATABASE_DB")
-    )
-
-    cursor = mydb.cursor()
-
-    cursor.execute("SELECT is_blacklisted,is_closed FROM chronicles_info WHERE channel.id=" + message.channel.id)
-    
-    retval = cursor.fetchone()
-
-    if retval['is_blacklisted'] == False and retval['is_closed'] == False:
-      valid = validateUser(message)
-      if valid == True:
-        return True
-      else:
-        return False
-    else:
-      return False
-
-async def postToDatabase(message):
-  await client.send_message(message.channel, "Posting Message to Database...")
-
+#Discord Event Called When a Channel is Deleted
+#Will Close the Chronicle
+#Channel: The Channel Deleted.
 @client.event
 async def on_channel_delete(channel):
   #Close Channel (assuming it is not blacklisted)
@@ -362,54 +42,88 @@ async def on_channel_delete(channel):
   cursor = mydb.cursor()
   cursor.execute("UPDATE chronicles_info SET is_closed = TRUE; WHERE channel_id=" + channel.id)
 
-
+#Discord Event Called When a Message is Sent to the Server/Channel
+#Will Control The Chronicler Based on Finding a Command or Not
+#If a Command is Found, Act Based on Command. If Not, Attempt to Record the Message
+#message: The Message Sent.
 @client.event
 async def on_message(message):
-  validUser = validateUser(message)
+  #Confirm That the Message Was Sent By Someone Other Than Itself, or
+  #Someone Not On the Channel's Ignored User List
+  validUser = validateUser(message, client)
+  #If the Message Author is Valid
   if validUser is True:
+    #If a Command Was Typed In
     if(message.content.startswith('!c')):
+      #Get the Arguments by Splitting on Spaces
       args = message.content.split(' ')
+      #Show Welcome Command
       if(args[1] == 'welcome'):
-        await showWelcome(message)
-      elif(args[1] == 'rewrite'):
-        await startRewrite(message)
+        await showWelcome(message, client)
+      #Show Help Command
       elif(args[1] == 'help'):
-        await showHelp(message)
+        await showHelp(message, client)
+      #Rewrite Chronicle Command
+      elif(args[1] == 'rewrite'):
+        await startRewrite(message, client)
+      #Set Channel Privacy Command
       elif(args[1] == 'set_private'):
-        await setPrivacy(message)
+        await setPrivacy(message, client)
+      #Add a New Keyword Command
       elif(args[1] == 'add_keyword'):
-        await addKeyword(message)
+        await addKeyword(message, client)
+      #Remove an Old Keyword Command
       elif(args[1] == 'remove_keyword'):
-        await removeKeyword(message)
+        await removeKeyword(message, client)
+      #Close the Chronicle Command
       elif(args[1] == 'close_story'):
-        await closeStory(message)
+        await closeStory(message, client)
+      #Reopen the Chronicle Command
       elif(args[1] == 'open_story'):
-        await openStory(message)
+        await openStory(message, client)
+      #Set the Chronicle's Warnings Command
       elif(args[1] == 'set_warnings'):
-        await setWarnings(message)
+        await setWarnings(message, client)
+      #Add a New Chronicle Warning Command
       elif(args[1] == 'add_warning'):
-        await addWarning(message)
+        await addWarning(message, client)
+      #Remove an Old Chronicle Warning Command
       elif(args[1] == 'remove_warning'):
-        await removeWarning(message)
+        await removeWarning(message, client)
+      #Create a New Channel Command
       elif(args[1] == 'create_channel'):
-        await createChroniclerChannel(message)
+        await createChroniclerChannel(message, client)
+      #Ignore Posted Message Command
       elif(args[1] == 'ignore'):
-        await sendIgnoreReaction(message)
+        await sendIgnoreReaction(message, client)
+      #Add User to Ignore List Command
       elif(args[1] == 'ignore_user'):
-        await addUserToIgnoreList(message, args)
+        await addUserToIgnoreList(message, client)
+      #Post Link to Chronicle Command
       elif(args[1] == 'get_link'):
-        await getChronicle(message)
+        await getChronicle(message, client)
+      #Blacklist Channel Command
       elif(args[1] == 'blacklist'):
-        await blacklistChronicle(message)
+        await blacklistChronicle(message, client)
+      #Show Channel Stats Command
       elif(args[1] == 'stats'):
-        await postChannelStats(message)
+        await postChannelStats(message, client)
+      #Add a Channel to Database Command
+      elif(args[1] == 'add_to_database'):
+        await addChannelToChronicler(message, client)
+      #No Valid Command
       else:
         await postInvalidComment(message)
+    #No Command Found
     else:
-      canPost = checkIfCanPost(message)    
+      #Make Sure The Chronicle Can Record
+      canPost = checkIfCanPost(message, client)    
       if canPost is True:
-        postToDatabase(message)
+        postToDatabase(message, client)
 
+#Keep the Bot Alive
 keep_alive()
+#Get the Token From .env File
 token = os.environ.get("DISCORD_BOT_TOKEN")
+#Log Bot In
 client.run(token)
