@@ -132,22 +132,22 @@ async def createChroniclerChannel(message, client):
   cursor = mydb.cursor()
 
   #Create Channel Tables
-  cursor.execute("CREATE TABLE " + newChannel.id + "_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)")
-  cursor.execute("CREATE TABLE " + newChannel.id + "_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)")
-  cursor.execute("CREATE TABLE " + newChannel.id + "_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)")
+  cursor.execute("CREATE TABLE %s_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)", (newChannel.id))
+  cursor.execute("CREATE TABLE %s_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)", (newChannel.id))
+  cursor.execute("CREATE TABLE %s_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)", (newChannel.id))
 
   #Add New Channel Into chronicles_info
-  cursor.execute("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, " + isPrivate + ", " + newChannel.name + ", " + newChannel.id + ", " + message.author + ", " + hasWarnings + ", " + warnings + ", " + datetime.datetime.now() + ")")
+  cursor.execute("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, %s, %s, %s, %s, %s, %s, %s)", (isPrivate.upper(), newChannel.name, newChannel.id, message.author.name, hasWarnings.upper(), warnings, datetime.strptime("%c")))
 
   #Add Any Specified Keywords
   if(len(keywords) > 0):
     for index in keywords:
-      cursor.execute("INSERT INTO " + newChannel.id + "_keywords (keyword, replacement_string) VALUES (" + index['word'] + ", " + index['replacement'] + ")")
+      cursor.execute("INSERT INTO %s_keywords (keyword, replacement_string) VALUES (%s, %s)", (newChannel.id, index['word'], index['replacement']))
 
   #Add Any Specified Users to Ignore
   if(len(ignoredUsers) > 0):
     for index in ignoredUsers:
-      cursor.execute("INSERT INTO " + newChannel.id + "_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (" + index['name'] + ", " + index['id'] + ")")
+      cursor.execute("INSERT INTO %s_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (%s, %s)", (newChannel.id, index['name'], index['id']))
 
   #Send Welcome and Help Messages into New Channel
   if(showWelcomeMessage == True or showHelpMessage == True):
@@ -217,26 +217,26 @@ async def addChannelToDatabase(message, client):
   cursor = mydb.cursor()
 
   #Create Channel Tables
-  cursor.execute("CREATE TABLE " + message.channel.id + "_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)")
-  cursor.execute("CREATE TABLE " + message.channel.id + "_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)")
-  cursor.execute("CREATE TABLE " + message.channel.id + "_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)")
+  cursor.execute("CREATE TABLE %s_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)", (message.channel.id))
+  cursor.execute("CREATE TABLE %s_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)", (message.channel.id))
+  cursor.execute("CREATE TABLE %s_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)", (message.channel.id))
 
   #Add New Channel Into chronicles_info
-  cursor.execute("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, " + isPrivate + ", " + message.channel.name + ", " + message.channel.id + ", " + message.author + ", " + hasWarnings + ", " + warnings + ", " + datetime.datetime.now() + ")")
+  cursor.execute("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, %s, %s, %s, %s, %s, %s, %s)", (isPrivate.upper(), message.channel.name, message.channel.id, message.author.name, hasWarnings.upper(), warnings, datetime.strptime("%c")))
 
   #Add Any Specified Keywords
   if(len(keywords) > 0):
     for index in keywords:
-      cursor.execute("INSERT INTO " + message.channel.id + "_keywords (keyword, replacement_string) VALUES (" + index['word'] + ", " + index['replacement'] + ")")
+      cursor.execute("INSERT INTO %s_keywords (keyword, replacement_string) VALUES (%s, %s)", (message.channel.id, index['word'], index['replacement']))
 
   #Add Any Specified Users to Ignore
   if(len(ignoredUsers) > 0):
     for index in ignoredUsers:
-      cursor.execute("INSERT INTO " + message.channel.id + "_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (" + index['name'] + ", " + index['id'] + ")")
+      cursor.execute("INSERT INTO %s_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (%s, %s)", (message.channel.id, index['word'], index['replacement']))
   
   #Rewrite the Chroncile if User Wishes
   if willRewrite == True:
-    startRewrite(message, client)
+    await startRewrite(message, client)
 
   #Tell User We Are Done
   await client.add_reaction(message, ":thumbup:")

@@ -18,9 +18,9 @@ async def setPrivacy(message, client):
 
   if lowerValue.strip() == "true":
     #Update Chronicle in Database
-    cursor.execute("UPDATE chronicles_info SET is_private = TRUE; WHERE channel_id=" + message.channel.id)
+    cursor.execute("UPDATE chronicles_info SET is_private = TRUE; WHERE channel_id=%s", (message.channel.id))
   elif lowerValue.strip() == "false":
     #Update Chronicle in Database
-    cursor.execute("UPDATE chronicles_info SET is_private = FALSE; WHERE channel_id=" + message.channel.id)
+    cursor.execute("UPDATE chronicles_info SET is_private = FALSE; WHERE channel_id=%s", (message.channel.id))
   
   await client.add_reaction(message, ":thumbup:")

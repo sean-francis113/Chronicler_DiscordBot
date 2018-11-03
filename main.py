@@ -27,6 +27,14 @@ client = discord.Client()
 async def postInvalidComment(message):
   await client.send_message(message.channel, "Did not find a valid command. Type '!c help' for a list of valid commands.")
 
+#Discord Event Called When a Message Has Been Editted
+#Will Try to Find the Old Message in the Chronicle and Replace it With the New Message
+#before: The Message Before it Was Editted
+#after: The Message After it Was Editted
+@client.event
+async def on_message_edit(before, after):
+  pass
+
 #Discord Event Called When a Channel is Deleted
 #Will Close the Chronicle
 #Channel: The Channel Deleted.
@@ -40,7 +48,7 @@ async def on_channel_delete(channel):
     database = os.environ.get("CHRONICLER_DATABASE_DB")
   )
   cursor = mydb.cursor()
-  cursor.execute("UPDATE chronicles_info SET is_closed = TRUE; WHERE channel_id=" + channel.id)
+  cursor.execute("UPDATE chronicles_info SET is_closed = TRUE; WHERE channel_id=%s",(channel.id))
 
 #Discord Event Called When a Message is Sent to the Server/Channel
 #Will Control The Chronicler Based on Finding a Command or Not
@@ -109,7 +117,7 @@ async def on_message(message):
       elif(args[1] == 'stats'):
         await postChannelStats(message, client)
       #Add a Channel to Database Command
-      elif(args[1] == 'add_to_database'):
+      elif(args[1] == 'whitelist'):
         await addChannelToChronicler(message, client)
       #No Valid Command
       else:

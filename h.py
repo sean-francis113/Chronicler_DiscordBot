@@ -13,7 +13,7 @@ async def showHelp(message, client):
                 '!c remove_keyword <Keyword> - Removes the specified <Keyword> and its associated <Replacement String> from The Chronicler. Example: !c remove_keyword -dual strike\n')
   helpString.append('!c close_story - Tells The Chronicler to \'Close\' this channel\'s Chronicle, preventing The Chronicler from EVER writing to it until it is reopened.\n'
                 '!c open_story - Tells The Chronicler to \'Open\' this channel\'s Chronicle, allowing The Chronicler to write to it until it is closed.\n'
-                '!c set_warnings <List of Warnings> - Sets the List of Warnings for the Chronicle. These warnings will be posted at the top of this channel\'s Chronicle, helping make sure readers know what may be in the Chronicle. Example: !c set_warnings Sexual Content, Drug and Alchohol Reference, Violence\n'
+                '!c set_warnings <List of Warnings> - Sets the List of Warnings for the Chronicle. These warnings will be posted at the top of this channel\'s Chronicle, helping make sure readers know what may be in the Chronicle. NOTE: This will reset any warnings already set into the Chronicle! If you want to just add onto the list, then use the \'add_warning\' command below. Example: !c set_warnings Sexual Content, Drug and Alchohol Reference, Violence\n'
                 '!c add_warning <Warning> - Adds the <Warning> to the list of Warnings. Example: !c add_warning Heavy Language\n'
                 '!c remove_warning <Warning> - Removes the Warning from the list of Warnings, if it exists in the list. Example: !c remove_warning Sexual Content\n')
   helpString.append('!c ignore - Tells The Chronicler to Ignore this message. Can be used to send a message that should not be recorded by The Chronicler.\n'
@@ -29,13 +29,13 @@ async def showHelp(message, client):
                 '* \'ignoreUsers=<User Name> | <User Name>...\' (Set up List of Ignored Users) (Default: None)\n'
                 '* \'soleOwnership=true\' or \'soleOwnership=false\' (If true, the user who entered the command will be the only one to have permissions for the new channel) (Default: soleOwnership=true)\n'
                 )
-  helpString.append('!c add_to_database <Options> - Adds the channel into The Chronicler\'s database. <Options> are optional (if not provided, it is set up for the default values). <Options> must be formatted as follows (without the quotes), seperated by a semicolon (;):\n'
-                '* \'channelName=<New Channel Name>\' (What the new channel will be named) (Default:<Your UserName>\'s Chronicle)'
+  helpString.append('!c whitelist <Options> - Adds the channel into The Chronicler\'s database. <Options> are optional (if not provided, it is set up for the default values). <Options> must be formatted as follows (without the quotes), seperated by a semicolon (;):\n'
                 '* \'isPrivate=true\' or \'isPrivate=false\' (Is the Chronicle Private?) (Default: isPrivate=false)\n'
                 '* \'keyword=<Keyword> | <ReplacementString>\' (Set up Keywords and Replacement Strings) (Can Be Used Multiple Times) (Default: None)\n'
                 '* \'warnings=<Warnings>\' (Create List of Warnings) (Default: None)\n'
                 '* \'ignoreUsers=<User Name> | <User Name>...\' (Set up List of Ignored Users) (Default: None)\n'
-                '* \'soleOwnership=true\' or \'soleOwnership=false\' (If true, the user who entered the command will be the only one to have permissions for the new channel) (Default: soleOwnership=true)\n')
+                '* \'soleOwnership=true\' or \'soleOwnership=false\' (If true, the user who entered the command will be the only one to have permissions for the new channel) (Default: soleOwnership=true)\n'
+                '* \'rewrite=true\' or \'rewrite=false\' (If true, will immediately start to rewrite the Chronicle. If False, it will not start rewriting. NOTE: Depending on how many messages are in the channel, this may take a while. Do not post any messages until it is complete.) (Default: \'rewrite=false\')')
   helpString.append('* \'showWelcome=true\' or \'showWelcome=false\' (Shows the welcome message once the channel is created) (Default: showWelcome=true)\n'
                 '* \'showHelp=true\' or \'showHelp=false\' (Shows the help message once the channel is created) (Default: showHelp=true)'
     'Example: !c create_channel isPrivate=false; keyword=-dual strike | Baelic swings both of his blades; keyword=-magic_missle | Gilla casts magic missle; warnings=Sexual Content, Drug and Alchohol Reference, Violence; ignoreUsers=Miggnor | Calli | Billi_Bob; soleOwnership=true')

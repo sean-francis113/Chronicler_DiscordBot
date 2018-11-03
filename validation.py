@@ -14,7 +14,7 @@ def validateUser(message, client):
 
   cursor = mydb.cursor()
 
-  cursor.execute("SELECT user_name,user_id FROM " + message.channel.id + "_ignoredUsers")
+  cursor.execute("SELECT user_name,user_id FROM %s_ignoredUsers", (message.channel.id))
 
   usersFound = cursor.fetchall()
 
@@ -36,7 +36,7 @@ async def checkIfCanPost(message, client):
 
   cursor = mydb.cursor()
 
-  cursor.execute("SELECT is_blacklisted,is_closed FROM chronicles_info WHERE channel.id=" + message.channel.id)
+  cursor.execute("SELECT is_blacklisted,is_closed FROM chronicles_info WHERE channel.id=%s", (message.channel.id))
     
   retval = cursor.fetchone()
 
