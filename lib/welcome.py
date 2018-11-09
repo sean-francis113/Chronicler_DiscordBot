@@ -1,6 +1,4 @@
 import discord
-import os
-import mysql.connector
 
 async def showWelcome(message, client):
   welcomeString = []

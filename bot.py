@@ -1,23 +1,20 @@
 #Import Statements
 import discord
-import os
-import mysql.connector
-
-#From Statements
-from blacklist import *
-from create import *
-from h import *
-from ignore import *
-from keep_alive import keep_alive
-from keywords import *
-from link import *
-from privacy import *
-from record import *
-from stats import *
-from story import *
-from validation import *
-from w import *
-from warning import *
+import lib.blacklist
+import lib.create
+import lib.db
+import lib.help
+import lib.ignore
+import lib.keywords
+import lib.link
+import lib.privacy
+import lib.record
+import lib.stats
+import lib.story
+import lib.validation
+import lib.welcome
+import lib.warning
+import settings as s
 
 #Setting the Client
 client = discord.Client()
@@ -33,7 +30,7 @@ async def postInvalidComment(message):
 #after: The Message After it Was Editted
 @client.event
 async def on_message_edit(before, after):
-  pass
+  lib.story.editChronicle(client, before, after)
 
 #Discord Event Called When a Channel is Deleted
 #Will Close the Chronicle
@@ -41,14 +38,7 @@ async def on_message_edit(before, after):
 @client.event
 async def on_channel_delete(channel):
   #Close Channel (assuming it is not blacklisted)
-  mydb = mysql.connector.connect(
-    host = "localhost",
-    user = os.environ.get("CHRONICLER_DATABASE_USER"),
-    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-    database = os.environ.get("CHRONICLER_DATABASE_DB")
-  )
-  cursor = mydb.cursor()
-  cursor.execute("UPDATE chronicles_info SET is_closed = TRUE; WHERE channel_id=%s",(channel.id))
+  lib.db.connectAndQuery(("UPDATE chronicles_info SET is_closed = TRUE; WHERE channel_id=%s",(channel.id)), True, False)
 
 #Discord Event Called When a Message is Sent to the Server/Channel
 #Will Control The Chronicler Based on Finding a Command or Not
@@ -58,7 +48,7 @@ async def on_channel_delete(channel):
 async def on_message(message):
   #Confirm That the Message Was Sent By Someone Other Than Itself, or
   #Someone Not On the Channel's Ignored User List
-  validUser = validateUser(message, client)
+  validUser = lib.validation.validateUser(message, client)
   #If the Message Author is Valid
   if validUser is True:
     #If a Command Was Typed In
@@ -67,71 +57,68 @@ async def on_message(message):
       args = message.content.split(' ')
       #Show Welcome Command
       if(args[1] == 'welcome'):
-        await showWelcome(message, client)
+        await lib.welcome.showWelcome(message, client)
       #Show Help Command
       elif(args[1] == 'help'):
-        await showHelp(message, client)
+        await lib.help.showHelp(message, client)
       #Rewrite Chronicle Command
       elif(args[1] == 'rewrite'):
-        await startRewrite(message, client)
+        await lib.record.startRewrite(message, client)
       #Set Channel Privacy Command
       elif(args[1] == 'set_private'):
-        await setPrivacy(message, client)
+        await lib.privacy.setPrivacy(message, client)
       #Add a New Keyword Command
       elif(args[1] == 'add_keyword'):
-        await addKeyword(message, client)
+        await lib.keywords.addKeyword(message, client)
       #Remove an Old Keyword Command
       elif(args[1] == 'remove_keyword'):
-        await removeKeyword(message, client)
+        await lib.keywords.removeKeyword(message, client)
       #Close the Chronicle Command
       elif(args[1] == 'close_story'):
-        await closeStory(message, client)
+        await lib.story.closeStory(message, client)
       #Reopen the Chronicle Command
       elif(args[1] == 'open_story'):
-        await openStory(message, client)
+        await lib.story.openStory(message, client)
       #Set the Chronicle's Warnings Command
       elif(args[1] == 'set_warnings'):
-        await setWarnings(message, client)
+        await lib.warning.setWarnings(message, client)
       #Add a New Chronicle Warning Command
       elif(args[1] == 'add_warning'):
-        await addWarning(message, client)
+        await lib.warning.addWarning(message, client)
       #Remove an Old Chronicle Warning Command
       elif(args[1] == 'remove_warning'):
-        await removeWarning(message, client)
+        await lib.warning.removeWarning(message, client)
       #Create a New Channel Command
       elif(args[1] == 'create_channel'):
-        await createChroniclerChannel(message, client)
+        await lib.create.createChroniclerChannel(message, client)
       #Ignore Posted Message Command
       elif(args[1] == 'ignore'):
-        await sendIgnoreReaction(message, client)
+        await lib.ignore.sendIgnoreReaction(message, client)
       #Add User to Ignore List Command
       elif(args[1] == 'ignore_user'):
-        await addUserToIgnoreList(message, client)
+        await lib.ignore.addUserToIgnoreList(message, client)
       #Post Link to Chronicle Command
       elif(args[1] == 'get_link'):
-        await getChronicle(message, client)
+        await lib.link.getChronicle(message, client)
       #Blacklist Channel Command
       elif(args[1] == 'blacklist'):
-        await blacklistChronicle(message, client)
+        await lib.blacklist.blacklistChronicle(message, client)
       #Show Channel Stats Command
       elif(args[1] == 'stats'):
-        await postChannelStats(message, client)
+        await lib.stats.postChannelStats(message, client)
       #Add a Channel to Database Command
       elif(args[1] == 'whitelist'):
-        await addChannelToChronicler(message, client)
+        await lib.create.addChannelToChronicler(message, client)
       #No Valid Command
       else:
         await postInvalidComment(message)
     #No Command Found
     else:
       #Make Sure The Chronicle Can Record
-      canPost = checkIfCanPost(message, client)    
+      canPost = lib.validation.checkIfCanPost(message, client)    
       if canPost is True:
-        postToDatabase(message, client)
-
-#Keep the Bot Alive
-keep_alive()
-#Get the Token From .env File
-token = os.environ.get("DISCORD_BOT_TOKEN")
+        lib.record.postToDatabase(message, client)
+				
 #Log Bot In
+token = s.bot['TOKEN']
 client.run(token)

@@ -1,11 +1,6 @@
 import discord
-import os
-import mysql.connector
 import datetime
-
-from w import showWelcome
-from h import showHelp
-from record import startRewrite
+import lib.db
 
 async def createChroniclerChannel(message, client):
   #Initialize Variables
@@ -122,32 +117,28 @@ async def createChroniclerChannel(message, client):
   newChannel = await client.create_channel(message.server, channelName, everyone, channelCreator, chronicler)
 
   #Connect to Database
-  mydb = mysql.connector.connect(
-    host = "localhost",
-    user = os.environ.get("CHRONICLER_DATABASE_USER"),
-    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-    database = os.environ.get("CHRONICLER_DATABASE_DB")
-  )
-
-  cursor = mydb.cursor()
+  #Need Cursor for Future Executions
+  cursor = lib.db.connectToDatabase()
 
   #Create Channel Tables
-  cursor.execute("CREATE TABLE %s_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)", (newChannel.id))
-  cursor.execute("CREATE TABLE %s_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)", (newChannel.id))
-  cursor.execute("CREATE TABLE %s_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)", (newChannel.id))
+  lib.db.queryDatabase(cursor, ("CREATE TABLE %s_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)", (newChannel.id)), False, False)
+  lib.db.queryDatabase(cursor, ("CREATE TABLE %s_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)", (newChannel.id)), False, False)
+  lib.db.queryDatabase(cursor, ("CREATE TABLE %s_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)", (newChannel.id)), False, False)
 
   #Add New Channel Into chronicles_info
-  cursor.execute("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, %s, %s, %s, %s, %s, %s, %s)", (isPrivate.upper(), newChannel.name, newChannel.id, message.author.name, hasWarnings.upper(), warnings, datetime.strptime("%c")))
+  lib.db.queryDatabase(cursor, ("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, %s, %s, %s, %s, %s, %s, %s)", (isPrivate.upper(), newChannel.name, newChannel.id, message.author.name, hasWarnings.upper(), warnings, datetime.strptime("%c"))), True, False)
 
   #Add Any Specified Keywords
   if(len(keywords) > 0):
     for index in keywords:
-      cursor.execute("INSERT INTO %s_keywords (keyword, replacement_string) VALUES (%s, %s)", (newChannel.id, index['word'], index['replacement']))
+      lib.db.queryDatabase(cursor, ("INSERT INTO %s_keywords (keyword, replacement_string) VALUES (%s, %s)", (newChannel.id, index['word'], index['replacement'])), False, False)
+	cursor.commit()
 
   #Add Any Specified Users to Ignore
   if(len(ignoredUsers) > 0):
     for index in ignoredUsers:
-      cursor.execute("INSERT INTO %s_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (%s, %s)", (newChannel.id, index['name'], index['id']))
+      lib.db.queryDatabase(cursor, ("INSERT INTO %s_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (%s, %s)", (newChannel.id, index['name'], index['id'])), False, False)
+	cursor.commit()
 
   #Send Welcome and Help Messages into New Channel
   if(showWelcomeMessage == True or showHelpMessage == True):
@@ -207,32 +198,28 @@ async def addChannelToDatabase(message, client):
           willRewrite = True
   
   #Connect to Database
-  mydb = mysql.connector.connect(
-    host = "localhost",
-    user = os.environ.get("CHRONICLER_DATABASE_USER"),
-    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-    database = os.environ.get("CHRONICLER_DATABASE_DB")
-  )
-
-  cursor = mydb.cursor()
+  #Need Cursor for Future Executions
+  cursor = lib.db.connectToDatabase()
 
   #Create Channel Tables
-  cursor.execute("CREATE TABLE %s_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)", (message.channel.id))
-  cursor.execute("CREATE TABLE %s_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)", (message.channel.id))
-  cursor.execute("CREATE TABLE %s_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)", (message.channel.id))
+  lib.db.queryDatabase(cursor, ("CREATE TABLE %s_contents (db_id INT NOT NULL PRIMARY KEY, channel_id VARCHAR(255) NOT NULL, word_count INT NOT NULL, story_content MEDIUMTEXT)", (message.channel.id)), False, False)
+  lib.db.queryDatabase(cursor, ("CREATE TABLE %s_keywords (kw_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, keyword VARCHAR(255) NOT NULL, replacement_string TEXT NOT NULL)", (message.channel.id)), False, False)
+  lib.db.queryDatabase(cursor, ("CREATE TABLE %s_ignoredUsers (iu_id INT AUTO INCREMENT NOT NULL PRIMARY KEY, ignoredUser_name VARCHAR(255) NOT NULL, ignoredUser_id VARCHAR(255) NOT NULL)", (message.channel.id)), False, False)
 
   #Add New Channel Into chronicles_info
-  cursor.execute("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, %s, %s, %s, %s, %s, %s, %s)", (isPrivate.upper(), message.channel.name, message.channel.id, message.author.name, hasWarnings.upper(), warnings, datetime.strptime("%c")))
+  lib.db.queryDatabase(cursor, ("INSERT INTO chronicles_info (is_blacklisted, is_closed, is_private, channel_name, channel_id, channel_owner, has_warning, warning_list, date_last_modified) VALUES (FALSE, FALSE, %s, %s, %s, %s, %s, %s, %s)", (isPrivate.upper(), message.channel.name, message.channel.id, message.author.name, hasWarnings.upper(), warnings, datetime.strptime("%c"))), True, False)
 
   #Add Any Specified Keywords
   if(len(keywords) > 0):
     for index in keywords:
-      cursor.execute("INSERT INTO %s_keywords (keyword, replacement_string) VALUES (%s, %s)", (message.channel.id, index['word'], index['replacement']))
+      lib.db.queryDatabase(cursor, ("INSERT INTO %s_keywords (keyword, replacement_string) VALUES (%s, %s)", (message.channel.id, index['word'], index['replacement'])), False, False)
+	cursor.commit()
 
   #Add Any Specified Users to Ignore
   if(len(ignoredUsers) > 0):
     for index in ignoredUsers:
-      cursor.execute("INSERT INTO %s_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (%s, %s)", (message.channel.id, index['word'], index['replacement']))
+      lib.db.queryDatabase(cursor, ("INSERT INTO %s_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (%s, %s)", (message.channel.id, index['word'], index['replacement'])), False, False)
+	cursor.commit()
   
   #Rewrite the Chroncile if User Wishes
   if willRewrite == True:

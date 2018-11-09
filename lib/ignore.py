@@ -1,6 +1,7 @@
 import discord
 import os
 import mysql.connector
+import lib.db
 
 async def sendIgnoreReaction(message, client):
   await client.add_reaction(message, ":thumbup:")
@@ -22,17 +23,11 @@ async def addUserToIgnoreList(message,client):
         combination = [serverUser.name, serverUser.id]
         ignoredUsers.append(dict(zip(dict_user_keys, combination)))
   
-  mydb = mysql.connector.connect(
-    host = "localhost",
-    user = os.environ.get("CHRONICLER_DATABASE_USER"),
-    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-    database = os.environ.get("CHRONICLER_DATABASE_DB")
-  )
-
-  cursor = mydb.cursor()
+  cursor = lib.db.connectToDatabase()
 
   for user in ignoredUsers:
-    cursor.execute("INSERT INTO %s_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (%s, %s)", (message.channel.id, user.name, user.id))
+    lib.db.queryDatabase(cursor, ("INSERT INTO %s_ignoredUsers (ignoredUser_name, ignoredUser_id) VALUES (%s, %s)", (message.channel.id, user.name, user.id)), False, False)
+  cursor.commit()
 
   await client.add_reaction(message, ":thumbup:")
 
@@ -42,16 +37,7 @@ async def addUserToIgnoreList(message,client):
 def getIgnoredUsers(channel):
   userList = []
   dict_user_keys = ['name', 'id']
-  mydb = mysql.connector.connect(
-    host = "localhost",
-    user = os.environ.get("CHRONICLER_DATABASE_USER"),
-    passwd = os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
-    database = os.environ.get("CHRONICLER_DATABASE_DB")
-  )
-
-  cursor = mydb.cursor()
-
-  rowCount = cursor.execute("SELECT ignoredUser_name,ignoredUser_id FROM %s_ignoredUsers", (channel.id))
+  rowCount, selectedRows = lib.db.connectAndQuery(("SELECT ignoredUser_name,ignoredUser_id FROM %s_ignoredUsers", (channel.id)), False, True)
 
   if rowCount == 0:
     return userList
