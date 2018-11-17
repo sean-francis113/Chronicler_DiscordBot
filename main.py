@@ -1,9 +1,14 @@
+#!/usr/bin/env python
+print "Content-type: text/plain\n"
+
 #Import Statements
 import discord
+import settings as s
+import lib.keep_alive
 import lib.blacklist
 import lib.create
 import lib.db
-import lib.help
+import lib.h
 import lib.ignore
 import lib.keywords
 import lib.link
@@ -12,9 +17,8 @@ import lib.record
 import lib.stats
 import lib.story
 import lib.validation
-import lib.welcome
+import lib.w
 import lib.warning
-import settings as s
 
 #Setting the Client
 client = discord.Client()
@@ -118,7 +122,10 @@ async def on_message(message):
       canPost = lib.validation.checkIfCanPost(message, client)    
       if canPost is True:
         lib.record.postToDatabase(message, client)
-				
+
+#Keep the Bot Alive
+lib.keep_alive.keep_alive()
+#Get the Token From .env File
+token = s.bot["TOKEN"]
 #Log Bot In
-token = s.bot['TOKEN']
 client.run(token)

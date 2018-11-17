@@ -2,6 +2,7 @@
 
 database = dict(
 	HOST = "",
+	PORT = ,
 	DB = "",
 	USER = "",
 	PASS = "" 

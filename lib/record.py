@@ -1,6 +1,4 @@
 import discord
-import os
-import mysql.connector
 import lib.db
 
 #Posts the message into the database
@@ -8,7 +6,6 @@ import lib.db
 #client: The bot's client
 async def postToDatabase(message, client):
   lib.db.connectAndQuery(("UPDATE %s_contents SET story_content = CONCAT(IFNULL(story_content, ""), \"\\n\" + %s)", (message.channel.id, message.content)), True, False)
-
   client.add_reaction(message, ":thumbup:")  
 
 async def startRewrite(message, client, finalString, lastMessageFound):

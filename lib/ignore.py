@@ -1,6 +1,4 @@
 import discord
-import os
-import mysql.connector
 import lib.db
 
 async def sendIgnoreReaction(message, client):
@@ -42,7 +40,6 @@ def getIgnoredUsers(channel):
   if rowCount == 0:
     return userList
   else:
-    selectedRows = cursor.fetchall()
     for row in selectedRows:
       combination = [row['ignoredUser_name'], row['ignoredUser_id']]
       userList.append(dict(zip(dict_user_keys, combination)))

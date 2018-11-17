@@ -4,7 +4,12 @@ import pymysql.cursors
 #Connect to the Database
 #Returns: The Database Connection's Cursor
 def connectToDatabase():
-	conn = pymysql.connect(host=s.database["HOST"], user=s.database["USER"], password=s.database["PASS"], db=s.database["DB"])
+	conn = pymysql.connect(
+    s.database["HOST"], 
+    s.database["USER"], 
+    s.database["PASS"], 
+    s.database["DB"]
+    )
 							 
 	return conn.cursor()
 	
@@ -21,7 +26,10 @@ def queryDatabase(cursor, query, wantToCommit, needResult):
 		cursor.commit()
 	
 	if needResult == True:
-		result = cursor.fetchall()
+		if rowCount == 1:
+			result = cursor.fetchone()
+		elif rowCount > 1:
+			result = cursor.fetchall()
 	
 	return rowCount, result
 
@@ -31,8 +39,7 @@ def queryDatabase(cursor, query, wantToCommit, needResult):
 #needResult: Do We Need to Get Some Sort of Result?
 #Returns: A Tuple of How Many Rows Were Found and The Result of the Query
 def connectAndQuery(query, wantToCommit, needResult):
-	conn = connectToDatabase()
-	c = conn.cursor()
+	c = connectToDatabase()
 	
 	rowCount = c.execute(query)
 	
@@ -40,6 +47,9 @@ def connectAndQuery(query, wantToCommit, needResult):
 		c.commit()
 	
 	if needResult == True:
-		result = c.fetchall()
+		if rowCount == 1:
+			result = c.fetchone()
+		elif rowCount > 1:
+			result = c.fetchall()
 	
 	return rowCount, result

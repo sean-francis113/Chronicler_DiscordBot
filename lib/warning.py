@@ -40,7 +40,7 @@ async def removeWarning(message, client):
   value = message.content.replace("!c remove_warning", '')
 
   #Connect to Database
-  cursor = connectToDatabase()
+  cursor = lib.db.connectToDatabase()
 
   rowCount, retval = lib.db.queryDatabase(cursor, ("SELECT * FROM chronicles_info WHERE channel_id = %s", (message.channel.id)), False, True)
 
