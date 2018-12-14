@@ -1,26 +1,18 @@
 import discord
 import lib.db
+import lib.reaction
 
 async def closeStory(message, client):
   #Connect to Database
-  lib.db.connectAndQuery(("UPDATE chronicles_info SET is_closed = TRUE WHERE channel_id = %s", (message.channel.id)), True, False)
+  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed = TRUE WHERE channel_id = {id};".format(id=message.channel.id), checkExists=True, tablename="chronicles_info", commit=True, closeConn=True)
 
-  await client.add_reaction(message, ":thumbup:")
+  await lib.reaction.reactThumbsUp(message, client)
 
 async def openStory(message, client):
   #Connect to Database
-  lib.db.connectAndQuery(("UPDATE chronicles_info SET is_closed = FALSE WHERE channel_id = %s", (message.channel.id)), True, False)
+  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed = FALSE WHERE channel_id = {id};".format(id=message.channel.id), checkExists=True, tablename="chronicles_info", commit=True, closeConn=True)
 
-  await client.add_reaction(message, ":thumbup:")
-
-#Gets the Contents of a Story from the Database
-#channel: The Channel to pull the Story from
-#Returns: The full string of the story
-def getContents(channel):
-  #Connect to Database
-  rowCount, retval = lib.db.connectAndQuery(("SELECT * FROM %s_contents", (channel.id)), False, True)
-  
-  return retval['story_content']
+  await lib.reaction.reactThumbsUp(message, client)
 
 #Edits the Current Chronicle
 #database: The Database to find the Chronicle
@@ -28,14 +20,19 @@ def getContents(channel):
 #newMessage: The New Message Contents
 def editChronicle(client, oldMessage, newMessage):
   #Connect to Database
-  cursor = lib.db.connectToDatabase()
+	cursor = lib.db.connectToDatabase()
+	
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM {id}_contents".format(newMessage.channel.id))
+	
+	for row in retval:
+		if row['entry_original'] == newMessage.content:
+			conn = lib.db.connectToDatabase()
+			lib.db.queryDatabase("UPDATE {id}_contents SET entry_original = {new} WHERE entry_id = {entry_id}".format(id=newMessage.channel.id, connection=conn, new=newMessage.content, entry_id=row['entry_id']), commit=False, closeConn=False)
 
-  rowCount, retval = lib.db.queryDatabase(cursor, ("SELECT * FROM %s_contents", (newMessage.channel.id)), False, True)
+			editted_content = newMessage.content
+			word_list = lib.keywords.getKeywords(newMessage.channel)
 
-  messageStr = retval['story_content']
+			for word in word_list:
+				editted_content = lib.keywords.replaceKeyword(editted_content, word['word'], word['replacement'])
 
-  messageStr.replace(oldMessage, newMessage)
-
-  lib.db.queryDatabase(cursor, ("UPDATE %s_contents SET story_content = %s", (newMessage.channel.id, messageStr)), True, False)
-
-  client.add_reaction(newMessage, ":thumbup:")
+			lib.db.queryDatabase("UPDATE {id}_contents SET entry_editted = {new} WHERE entry_id = {entry_id}".format(id=newMessage.channel.id, connection=conn, new=editted_content, entry_id=row['entry_id']), commit=True, closeConn=True)

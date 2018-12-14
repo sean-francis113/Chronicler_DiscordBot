@@ -1,49 +1,66 @@
 import discord
 import lib.db
+import lib.reaction
 
 async def addKeyword(message, client):
-  value = message.content.replace('!c add_keyword', '')
-  keywordValues = value.split('|')
-
-  cursor = lib.db.connectToDatabase()
-
-  rowCount, result = lib.db.queryDatabase(cursor, ("SELECT keyword FROM %s_keywords WHERE keyword=%s", (message.channel.id, keywordValues[0].strip())), False, True)
-
-  if rowCount == 0:
-    lib.db.queryDatabase(cursor, ("INSERT INTO %s_keywords (keyword,replacement) VALUES (%s, %s)", (message.channel.id, keywordValues[0].strip(), keywordValues[1].strip())), True, False)
-  else:
-    lib.db.queryDatabase(cursor, ("UPDATE %s_keywords SET replacement = %s WHERE keyword = %s;", (message.channel.id, keywordValues[1].strip(), keywordValues[0].strip())), True, False)
-
-  await client.add_reaction(message.channel, ":thumbup:")
+	value = message.content.replace('!c add_keyword', '')
+	keywordValues = value.split('|')
+	
+	conn = lib.db.connectToDatabase()
+	
+	rowCount, result, exists = lib.db.queryDatabase("SELECT keyword FROM {id}_keywords WHERE keyword={word}".format(id=message.channel.id, word=keywordValues[0].strip()), connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
+	
+	if exists == False:
+		await lib.reaction.reactThumbsDown(message, client)
+		await client.send_message(message.channel, "The Chronicler ran into an issue. Please use our contact form at chronicler.seanmfrancis.net/contact.php or email thechroniclerbot@gmail.com with the following: 'addKeyword() Failed! ERROR 404: {id}_keywords QUERY: SELECT keyword FROM {id}_keywords WHERE keyword={word}'".format(id=message.channel.id, word=keywordValues[0].strip()))
+		conn.close()
+		return
+	else:
+		if rowCount == 0 and exists == True:
+			lib.db.queryDatabase("INSERT INTO {id}_keywords (keyword,replacement) VALUES ({word}, {replacement})".format(id=message.channel.id, word=keywordValues[0].strip(), replacement=keywordValues[1].strip()), connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
+		else:
+			lib.db.queryDatabase("UPDATE {id}_keywords SET replacement = {replacement} WHERE keyword = {word};".format(id=message.channel.id, replacement=keywordValues[1].strip(), word=keywordValues[0].strip()), connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
+			
+	conn.close()
+	await lib.reaction.reactThumbsUp(message, client)
 
 async def removeKeyword(message, client):
-  value = message.content.replace('!c add_keyword', '')
+	value = message.content.replace('!c add_keyword', '')
+	
+	conn = lib.db.connectToDatabase()
+	
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT keyword FROM {id}_keywords WHERE keyword = {word}".format(id=message.channel.id, word=value.strip()), connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
+	
+	if exists == False:
+		await lib.reaction.reactThumbsDown(message, client)
+		await client.send_message(message.channel, "The Chronicler ran into an issue. Please use our contact form at chronicler.seanmfrancis.net/contact.php or email thechroniclerbot@gmail.com with the following: 'removeKeyword() Failed! ERROR 404: {id}_keywords QUERY: SELECT keyword FROM {id}_keywords WHERE keyword = {word}'".format(id=message.channel.id, word=value.strip()))
+		conn.close()
+		return
+	else:
+		if rowCount == 1:
+			lib.db.queryDatabase("DELETE FROM {id}_keywords WHERE keyword = {word}".format(id=message.channel.id, word=value.strip()), connection=conn, checkExists=False, commit=True)
+			await lib.reaction.reactThumbsUp(message, client)
+		elif rowCount == 0:
+			await lib.reaction.reactThumbsDown(message, client)
+			await client.send_message(message.channel, "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly? If you are, make sure it is a keyword that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue.")
 
-  cursor = lib.db.connectToDatabase()
-
-  rowCount, retval = lib.db.queryDatabase(cursor, ("SELECT keyword FROM %s_keywords WHERE keyword = %s", (message.channel.id, value.strip())), False, True)
-
-  if rowCount == 1:
-    lib.db.queryDatabase(cursor, ("DELETE FROM %s_keywords WHERE keyword = %s", (message.channel.id, value.strip())), True, False)
-    await client.add_reaction(message, ":thumbup:")
-  elif rowCount == 0:
-    await client.send_message(message.channel, "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly?")
+	conn.close()
 
 #Gets the List of Keywords, if any, of the Story from the Database
 #channel: The Channel to pull the Keywords from
 #Returns: An tuple array of {keyword, replacement_string}
 def getKeywords(channel):
-  wordList = []
-  dict_word_keys = ['word', 'replacement']
-  rowCount, retval = lib.db.connectAndQuery(("SELECT keyword,replacement_string FROM %s_keywords", (channel.id)), False, True)
-
-  if rowCount == 0:
-    return wordList
-  else:
-    for row in retval:
-      combination = [row['keyword'], row['replacement']]
-      wordList.append(dict(zip(dict_word_keys, combination)))
-    return wordList
+	wordList = []
+	dict_word_keys = ['word', 'replacement']
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT word,replacement FROM {id}_keywords".format(id=channel.id), checkExists=True, tablename="{id}_keywords".format(id=channel.id), closeConn=True)
+	
+	if rowCount == 0:
+		return wordList
+	else:
+		for row in retval:
+			combination = [row['keyword'], row['replacement']]
+			wordList.append(dict(zip(dict_word_keys, combination)))
+		return wordList
 
 #Searches through the String, replacing all instances of 'keyword' with 'replacement'
 #string: The String to Search Through

@@ -1,55 +1,68 @@
-import settings as s
+import os
 import pymysql.cursors
 
 #Connect to the Database
 #Returns: The Database Connection's Cursor
 def connectToDatabase():
 	conn = pymysql.connect(
-    s.database["HOST"], 
-    s.database["USER"], 
-    s.database["PASS"], 
-    s.database["DB"]
+    os.environ.get("CHRONICLER_DATABASE_HOST"), 
+    os.environ.get("CHRONICLER_DATABASE_USER"), 
+    os.environ.get("CHRONICLER_DATABASE_PASSWORD"), 
+    os.environ.get("CHRONICLER_DATABASE_DB")
     )
 							 
-	return conn.cursor()
+	return conn
 	
-#Execute a Query into Database and Return the Result
-#cursor: The Database Connection's Cursor
+#Execute a Query into Database, Connecting if Necessary, and Return the Result
 #query: String of the MySQL Query
-#wantToCommit: Do We Want to Commit the Query?
-#needResult: Do We Need to Get Some Sort of Result?
-#Returns: A Tuple of How Many Rows Were Found and The Result of the Query
-def queryDatabase(cursor, query, wantToCommit, needResult):
+#cursor: The Database Connection's Cursor
+#checkExists: Do We Need to Check if the Table Exists?
+#tablename: The Name of the Table We Want to Query. Necessary to Confirm Table Exists
+#commit: Do We Want to Commit the Query?
+#getResult: Do We Need to Get Some Sort of Result?
+#Returns: A Tuple of How Many Rows Were Found, The Result of the Query and if Table Exists, rowCount = 0, result=None and exists=False Otherwise
+def queryDatabase(query, connection=None, checkExists=True, tablename=None, commit=False, getResult=False, closeConn=True):
+	if checkExists == True:
+		if (tablename == "" or tablename is None) or checkIfTableExists(connectToDatabase().cursor(), tablename) == False:
+			return 0, None, False
+
+	result = None
+	rowCount = 0
+
+	if connection is None:
+		connection = connectToDatabase()
+
+	cursor = connection.cursor()
 	rowCount = cursor.execute(query)
 	
-	if wantToCommit == True:
-		cursor.commit()
-	
-	if needResult == True:
+	if getResult == True and rowCount > 0:
 		if rowCount == 1:
 			result = cursor.fetchone()
 		elif rowCount > 1:
 			result = cursor.fetchall()
 	
-	return rowCount, result
+	if commit == True:
+		connection.commit()
 
-#Connects to the Database and Immediately Querys it, Returning the Result.
-#query: String Query to send to the database
-#wantToCommit: Do We Want to Commit the Query?
-#needResult: Do We Need to Get Some Sort of Result?
-#Returns: A Tuple of How Many Rows Were Found and The Result of the Query
-def connectAndQuery(query, wantToCommit, needResult):
-	c = connectToDatabase()
+	cursor.close()
+
+	if closeConn == True:
+		connection.close()
 	
-	rowCount = c.execute(query)
-	
-	if wantToCommit == True:
-		c.commit()
-	
-	if needResult == True:
-		if rowCount == 1:
-			result = c.fetchone()
-		elif rowCount > 1:
-			result = c.fetchall()
-	
-	return rowCount, result
+	return rowCount, result, True
+
+#Checks to See if the Provided Table Exists
+#cursor: The Database Connection's Cursor
+#tablename: The Name of the Table We Want to Confirm Exists
+def checkIfTableExists(cursor, tablename):
+	cursor.execute("""
+        SELECT COUNT(*)
+        FROM information_schema.tables
+        WHERE table_schema = \"{db}\" AND table_name = \"{table}\"
+        """.format(db=os.environ.get("CHRONICLER_DATABASE_DB"), table=tablename.replace('\'', '\'\'')))
+	if cursor.fetchone()[0] == 1:
+		cursor.close()
+		return True
+	else:
+		cursor.close()	
+		return False
