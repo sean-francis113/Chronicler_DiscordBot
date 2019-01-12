@@ -1,5 +1,4 @@
 #Import Statements
-import discord
 import lib.db
 import lib.reaction
 

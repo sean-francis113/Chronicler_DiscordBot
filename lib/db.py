@@ -17,13 +17,14 @@ def connectToDatabase():
 #query: String of the MySQL Query
 #cursor: The Database Connection's Cursor
 #checkExists: Do We Need to Check if the Table Exists?
-#tablename: The Name of the Table We Want to Query. Necessary to Confirm Table Exists
+#tablename: The Name of the Table We Want to Query. Necessary to Confirm Table Exists. Should Try to Find a More Elegant Solution.
 #commit: Do We Want to Commit the Query?
 #getResult: Do We Need to Get Some Sort of Result?
 #Returns: A Tuple of How Many Rows Were Found, The Result of the Query and if Table Exists, rowCount = 0, result=None and exists=False Otherwise
 def queryDatabase(query, connection=None, checkExists=True, tablename=None, commit=False, getResult=False, closeConn=True):
 	if checkExists == True:
 		if (tablename == "" or tablename is None) or checkIfTableExists(connectToDatabase().cursor(), tablename) == False:
+			print("Table {tablename} Does Not Exist!".format(tablename=tablename))
 			return 0, None, False
 
 	result = None
@@ -40,6 +41,7 @@ def queryDatabase(query, connection=None, checkExists=True, tablename=None, comm
 			result = cursor.fetchone()
 		elif rowCount > 1:
 			result = cursor.fetchall()
+		print("At getResult: {result}".format(result=result))
 	
 	if commit == True:
 		connection.commit()

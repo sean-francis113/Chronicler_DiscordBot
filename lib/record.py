@@ -1,4 +1,5 @@
-import discord
+import lib.keywords
+import lib.symbol
 import lib.db
 import lib.reaction
 
@@ -9,11 +10,31 @@ async def postToDatabase(message, client):
 	editted_content = message.content
 
 	word_list = lib.keywords.getKeywords(message.channel)
+	symbol_list = lib.symbol.getSymbols(message.channel)
 
 	for word in word_list:
-		editted_content = lib.keywords.replaceKeyword(editted_content, word['word'], word['replacement'])
-		
-	lib.db.queryDatabase("INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES ({type}, {char_count}, {word_count}, {entry_owner} {entry_editted}, {entry_original})".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content), checkExists=True, tablename="{id}_contents", commit=True, closeConn=True)
+		editted_content = lib.keywords.replaceKeyword(editted_content, word[0], word[1])
+
+	print("After Keyword Replacement: {string}".format(string=editted_content))
+	for symbol in symbol_list:
+		editted_content = lib.symbol.pluckSymbols(symbol[0], symbol[1], editted_content)
+
+	dataToPost = ("""Channel ID: {id}
+Entry Type: {type}
+Char Count: {char_count}
+Word Count: {word_count}
+Entry Owner: {entry_owner}
+Entry Editted: {entry_editted}
+Entry Original: {entry_original}
+""".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content))
+	
+	print(dataToPost)
+
+	query = "INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content)
+
+	print(query)
+
+	lib.db.queryDatabase(query, checkExists=True, tablename="{id}_contents".format(id=message.channel.id), commit=True, closeConn=True)
 	
 	await lib.reaction.reactThumbsUp(message, client)  
 
@@ -28,7 +49,18 @@ async def startRewrite(message, client, finalString, lastMessageFound):
 		return
 	else:
 		async for curMessage in client.logs_from(message.channel, after=lastMessageFound, limit=500):
-			lib.db.queryDatabase("INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_content) VALUES ({type}, {char_count}, {word_count}, {entry_owner}, {entry_contents})".format(id=message.channel.id, type="In-Character", char_count=len(curMessage.content), word_count=len(curMessage.content.split(" ")), entry_owner=curMessage.author.name, entry_contents=curMessage.content), connection=conn, checkExists=False, commit=False, closeConn=False)
+			editted_content = message.content
+
+			word_list = lib.keywords.getKeywords(message.channel)
+			symbol_list = lib.symbol.getSymbols(message.channel)
+
+			for word in word_list:
+				editted_content = lib.keywords.replaceKeyword(editted_content, word[0], word[1])
+
+			for symbol in symbol_list:
+				editted_content = lib.symbol.pluckSymbols(symbol[0], symbol[1], editted_content)
+
+			lib.db.queryDatabase("INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\"{type}\", {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content), connection=conn, checkExists=False, commit=False, closeConn=False)
 			
 			if messagesChecked == 500:
 				lastMessageFound = curMessage

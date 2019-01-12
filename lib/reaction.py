@@ -1,5 +1,3 @@
-import discord
-
 async def reactThumbsUp(message, client):
 	await client.add_reaction(message, "\U0001F44D")
 

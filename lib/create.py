@@ -15,6 +15,8 @@ async def createChroniclerChannel(message, client, createNew=True):
 	warnings = ''
 	dict_user_keys = ['name', 'id']
 	ignoredUsers = []
+	dict_symbol_keys = ['start', 'end']
+	ignoredSymbols = []
 	channelName = message.author.name + '\'s Chronicle'
 	everyone_perms = discord.PermissionOverwrite(
 		create_instant_invite=False, 
@@ -83,6 +85,12 @@ async def createChroniclerChannel(message, client, createNew=True):
 					elif serverUser.name == strippedUser:
 						combination = [serverUser.name, serverUser.id]
 						ignoredUsers.append(dict(zip(dict_user_keys, combination)))
+		elif(option.startswith('ignoreSymbols=')):
+			value = option.replace('ignoreSymbols=', '')
+			symbolCombination = value.split(';')
+			for symbol in symbolCombination:
+				symbolArr = symbol.split('|')
+				ignoredSymbols.append(dict(zip(dict_symbol_keys, [symbolArr[0], symbolArr[1]])))
 		elif(option.startswith('soleOwnership=') and createNew==True):
 			value = option.replace('soleOwnership=', '')
 			value = value.lower()
@@ -145,13 +153,19 @@ async def createChroniclerChannel(message, client, createNew=True):
 	#Add Any Specified Keywords
 	if(len(keywords) > 0):
 		for index in keywords:
-			lib.db.queryDatabase("INSERT INTO {id}_keywords (word, replacement) VALUES ({word}, {replacement})".format(id=chroniclerChannel.id, word=index['word'], replacement=index['replacement']), connection=conn, checkExists=True, tablename="{id}_ignoredUsers".format(id=chroniclerChannel.id), commit=False, closeConn=False)
+			lib.db.queryDatabase("INSERT INTO {id}_keywords (word, replacement) VALUES (\"{word}\", \"{replacement}\")".format(id=chroniclerChannel.id, word=index['word'], replacement=index['replacement']), connection=conn, checkExists=True, tablename="{id}_keywords".format(id=chroniclerChannel.id), commit=False, closeConn=False)
 		conn.commit()
 
 	#Add Any Specified Users to Ignore
 	if(len(ignoredUsers) > 0):
 		for index in ignoredUsers:
-			lib.db.queryDatabase("INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES ({user_name}, {user_id})".format(channel_id=chroniclerChannel.id, user_name=index['name'], user_id=index['id']), connection=conn, checkExists=True, tablename="{id}_ignoredUsers".format(id=chroniclerChannel.id), commit=False, closeConn=False)
+			lib.db.queryDatabase("INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES (\"{user_name}\", \"{user_id}\")".format(channel_id=chroniclerChannel.id, user_name=index['name'], user_id=index['id']), connection=conn, checkExists=True, tablename="{id}_ignoredUsers".format(id=chroniclerChannel.id), commit=False, closeConn=False)
+		conn.commit()
+
+	#Add Any Specified Symbols to Ignore
+	if(len(ignoredSymbols) > 0):
+		for index in ignoredSymbols:
+			lib.db.queryDatabase("INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")".format(id=chroniclerChannel.id, start=index['start'], end=index['end']), connection=conn, checkExists=True, tablename="{id}_ignoredSymbols".format(id=chroniclerChannel.id), commit=False, closeConn=False)
 		conn.commit()
 
 	#Send Welcome and Help Messages into New Channel

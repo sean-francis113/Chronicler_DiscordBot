@@ -1,4 +1,3 @@
-import discord
 import lib.db
 import lib.reaction
 
@@ -8,7 +7,7 @@ async def addKeyword(message, client):
 	
 	conn = lib.db.connectToDatabase()
 	
-	rowCount, result, exists = lib.db.queryDatabase("SELECT keyword FROM {id}_keywords WHERE keyword={word}".format(id=message.channel.id, word=keywordValues[0].strip()), connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
+	rowCount, result, exists = lib.db.queryDatabase("SELECT keyword FROM {id}_keywords WHERE keyword=\"{word}\"".format(id=message.channel.id, word=keywordValues[0].strip()), connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
 	
 	if exists == False:
 		await lib.reaction.reactThumbsDown(message, client)
@@ -17,19 +16,19 @@ async def addKeyword(message, client):
 		return
 	else:
 		if rowCount == 0 and exists == True:
-			lib.db.queryDatabase("INSERT INTO {id}_keywords (keyword,replacement) VALUES ({word}, {replacement})".format(id=message.channel.id, word=keywordValues[0].strip(), replacement=keywordValues[1].strip()), connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
+			lib.db.queryDatabase("INSERT INTO {id}_keywords (keyword,replacement) VALUES (\"{word}\", \"{replacement}\")".format(id=message.channel.id, word=keywordValues[0].strip(), replacement=keywordValues[1].strip()), connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
 		else:
-			lib.db.queryDatabase("UPDATE {id}_keywords SET replacement = {replacement} WHERE keyword = {word};".format(id=message.channel.id, replacement=keywordValues[1].strip(), word=keywordValues[0].strip()), connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
+			lib.db.queryDatabase("UPDATE {id}_keywords SET replacement=\"{replacement}\" WHERE keyword=\"{word}\";".format(id=message.channel.id, replacement=keywordValues[1].strip(), word=keywordValues[0].strip()), connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
 			
 	conn.close()
 	await lib.reaction.reactThumbsUp(message, client)
 
 async def removeKeyword(message, client):
-	value = message.content.replace('!c add_keyword', '')
+	value = message.content.replace('!c remove_keyword', '')
 	
 	conn = lib.db.connectToDatabase()
 	
-	rowCount, retval, exists = lib.db.queryDatabase("SELECT keyword FROM {id}_keywords WHERE keyword = {word}".format(id=message.channel.id, word=value.strip()), connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT keyword FROM {id}_keywords WHERE keyword=\"{word}\"".format(id=message.channel.id, word=value.strip()), connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
 	
 	if exists == False:
 		await lib.reaction.reactThumbsDown(message, client)
@@ -38,7 +37,7 @@ async def removeKeyword(message, client):
 		return
 	else:
 		if rowCount == 1:
-			lib.db.queryDatabase("DELETE FROM {id}_keywords WHERE keyword = {word}".format(id=message.channel.id, word=value.strip()), connection=conn, checkExists=False, commit=True)
+			lib.db.queryDatabase("DELETE FROM {id}_keywords WHERE keyword=\"{word}\"".format(id=message.channel.id, word=value.strip()), connection=conn, checkExists=False, commit=True)
 			await lib.reaction.reactThumbsUp(message, client)
 		elif rowCount == 0:
 			await lib.reaction.reactThumbsDown(message, client)
@@ -51,15 +50,17 @@ async def removeKeyword(message, client):
 #Returns: An tuple array of {keyword, replacement_string}
 def getKeywords(channel):
 	wordList = []
-	dict_word_keys = ['word', 'replacement']
-	rowCount, retval, exists = lib.db.queryDatabase("SELECT word,replacement FROM {id}_keywords".format(id=channel.id), checkExists=True, tablename="{id}_keywords".format(id=channel.id), closeConn=True)
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT word,replacement FROM {id}_keywords".format(id=channel.id), checkExists=True, tablename="{id}_keywords".format(id=channel.id), getResult=True, closeConn=True)
 	
 	if rowCount == 0:
 		return wordList
 	else:
-		for row in retval:
-			combination = [row['keyword'], row['replacement']]
-			wordList.append(dict(zip(dict_word_keys, combination)))
+		i = 0
+		while i < len(retval):
+			combination = (retval[i], retval[i + 1])
+			wordList.append(combination)
+			print("Word: {word}\nReplacement: {replacement}".format(word=retval[i], replacement=retval[i + 1]))
+			i = i + 2
 		return wordList
 
 #Searches through the String, replacing all instances of 'keyword' with 'replacement'
@@ -68,5 +69,11 @@ def getKeywords(channel):
 #replacement: The string to replace 'keyword' with
 #Returns: The New String with all replacements made
 def replaceKeyword(string, keyword, replacement):
-  newString = string.replace(keyword, replacement)
-  return newString
+	word = " {word} ".format(word=keyword)
+	replace = " {replacement} ".format(replacement=replacement)
+	if string.find(word) != -1:
+		return string.replace(word, replace)
+	elif string.find(" ") == -1:
+		return string.replace(keyword, replacement)
+	else:
+		return string

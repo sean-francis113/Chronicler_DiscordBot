@@ -1,5 +1,3 @@
-import discord
-
 async def showHelp(message, client):
   helpString = []
 

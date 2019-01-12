@@ -1,5 +1,3 @@
-import discord
-
 async def showWelcome(message, client):
   welcomeString = []
 
