@@ -42,7 +42,7 @@ async def on_message_edit(before, after):
 @client.event
 async def on_channel_delete(channel):
   #Close Channel (assuming it is not blacklisted)
-  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed=TRUE WHERE channel_id={id};".format(id=channel.id),commit=True,checkExists=True,tablename="chronicles_info")
+  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed=TRUE WHERE channel_id={id};".format(id=channel.id), client, channel=channel, commit=True,checkExists=True,tablename="chronicles_info")
 
 
 #Discord Event Called When a Message is Sent to the Server/Channel

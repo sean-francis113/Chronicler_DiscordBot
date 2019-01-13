@@ -15,33 +15,17 @@ async def postToDatabase(message, client):
 	for word in word_list:
 		editted_content = lib.keywords.replaceKeyword(editted_content, word[0], word[1])
 
-	print("After Keyword Replacement: {string}".format(string=editted_content))
 	for symbol in symbol_list:
 		editted_content = lib.symbol.pluckSymbols(symbol[0], symbol[1], editted_content)
 
-	dataToPost = ("""Channel ID: {id}
-Entry Type: {type}
-Char Count: {char_count}
-Word Count: {word_count}
-Entry Owner: {entry_owner}
-Entry Editted: {entry_editted}
-Entry Original: {entry_original}
-""".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content))
-	
-	print(dataToPost)
-
-	query = "INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content)
-
-	print(query)
-
-	lib.db.queryDatabase(query, checkExists=True, tablename="{id}_contents".format(id=message.channel.id), commit=True, closeConn=True)
+	lib.db.queryDatabase("INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content), client, message=message, checkExists=True, tablename="{id}_contents".format(id=message.channel.id), commit=True, closeConn=True)
 	
 	await lib.reaction.reactThumbsUp(message, client)  
 
 async def startRewrite(message, client, finalString, lastMessageFound):
 	messagesChecked = 0
 	conn = lib.db.connectToDatabase()
-	rowCount, result, exists = lib.db.queryDatabase("DELETE FROM {id}_contents".format(id=message.channel.id), connection=conn, checkExists=True, tablename="{id}_contents".format(id=message.channel.id), commit=False, closeConn=False)
+	rowCount, result, exists = lib.db.queryDatabase("DELETE FROM {id}_contents".format(id=message.channel.id), client, message=message, connection=conn, checkExists=True, tablename="{id}_contents".format(id=message.channel.id), commit=False, closeConn=False)
 	
 	if exists == False:
 		await lib.reaction.reactThumbsDown(message, client)
@@ -60,7 +44,7 @@ async def startRewrite(message, client, finalString, lastMessageFound):
 			for symbol in symbol_list:
 				editted_content = lib.symbol.pluckSymbols(symbol[0], symbol[1], editted_content)
 
-			lib.db.queryDatabase("INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\"{type}\", {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content), connection=conn, checkExists=False, commit=False, closeConn=False)
+			lib.db.queryDatabase("INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\"{type}\", {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")".format(id=message.channel.id, type="In-Character", char_count=len(editted_content), word_count=len(editted_content.split(" ")), entry_owner=message.author.name, entry_editted=editted_content, entry_original=message.content), client, message=message, connection=conn, checkExists=False, commit=False, closeConn=False)
 			
 			if messagesChecked == 500:
 				lastMessageFound = curMessage

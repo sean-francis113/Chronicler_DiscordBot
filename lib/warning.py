@@ -8,11 +8,11 @@ async def setWarnings(message, client):
   conn = lib.db.connectToDatabase()
 
   if value == '':
-    lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = FALSE WHERE channel_id={id}".format(id=message.channel.id), connection=conn, checkExists=True, tablename="chronicles_info", commit=True, closeConn=False)
+    lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = FALSE WHERE channel_id={id}".format(id=message.channel.id), client, message=message, connection=conn, checkExists=True, tablename="chronicles_info", commit=True, closeConn=False)
   else:
-    lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = TRUE WHERE channel_id={id}".format(id=message.channel.id), connection=conn, checkExists=True, tablename="chronicles_info", commit=True, closeConn=False)
+    lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = TRUE WHERE channel_id={id}".format(id=message.channel.id), client, message=message, connection=conn, checkExists=True, tablename="chronicles_info", commit=True, closeConn=False)
 
-  lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = {list}".format(list=value.strip()), connection=conn, checkExists=False, commit=True, closeConn=True)
+  lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = {list}".format(list=value.strip()), client, message=message, connection=conn, checkExists=False, commit=True, closeConn=True)
 
   await lib.reaction.reactThumbsUp(message, client)
 
@@ -22,7 +22,7 @@ async def addWarning(message, client):
   #Connect to Database
   conn = lib.db.connectToDatabase()
 
-  rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM chronicles_info WHERE channel_id = {id}".format(id=message.channel.id), connection=conn, checkExists=True, tablename="chronicles_info", commit=False, getResult=True, closeConn=False)
+  rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM chronicles_info WHERE channel_id = {id}".format(id=message.channel.id), client, message=message, connection=conn, checkExists=True, tablename="chronicles_info", commit=False, getResult=True, closeConn=False)
 
   addition = ''
 
@@ -31,8 +31,8 @@ async def addWarning(message, client):
   else:
     addition = ', ' + value.strip()
 
-  lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = TRUE WHERE channel_id = {id}".format(id=message.channel.id), connection=conn, checkExists=True, tablename="chronicles_info", commit=False, closeConn=False)
-  lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = CONCAT(IFNULL(warning_list, ''), {add})".format(add=addition.strip()), connection=conn, checkExists=False, commit=True, closeConn=True)
+  lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = TRUE WHERE channel_id = {id}".format(id=message.channel.id), client, message=message, connection=conn, checkExists=True, tablename="chronicles_info", commit=False, closeConn=False)
+  lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = CONCAT(IFNULL(warning_list, ''), {add})".format(add=addition.strip()), client, message=message, connection=conn, checkExists=False, commit=True, closeConn=True)
 
   await lib.reaction.reactThumbsUp(message, client)
 
@@ -42,7 +42,7 @@ async def removeWarning(message, client):
   #Connect to Database
   conn = lib.db.connectToDatabase()
 
-  rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM chronicles_info WHERE channel_id = {id}".format(id=message.channel.id), connection=conn, checkExists=True, commit=False, getResult=True, closeConn=False)
+  rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM chronicles_info WHERE channel_id = {id}".format(id=message.channel.id), client, message=message, connection=conn, checkExists=True, commit=False, getResult=True, closeConn=False)
 
   warningList = retval['warning_list']
   index = warningList.find(value)
@@ -57,11 +57,11 @@ async def removeWarning(message, client):
       finalList = warningList.replace(value, '')
 
     if finalList.strip() == '':
-      lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = FALSE WHERE channel_id = {id}".format(id=message.channel.id), connection=conn, checkExists=True, commit=False, closeConn=False)
+      lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = FALSE WHERE channel_id = {id}".format(id=message.channel.id), client, message=message, connection=conn, checkExists=True, commit=False, closeConn=False)
     else:
-      lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = TRUE WHERE channel_id = {id}".format(id=message.channel.id), connection=conn, checkExists=True, commit=False, closeConn=False)
+      lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = TRUE WHERE channel_id = {id}".format(id=message.channel.id), client, message=message, connection=conn, checkExists=True, commit=False, closeConn=False)
 
-    lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = {final}".format(final=finalList.strip()), connection=conn, checkExists=False, commit=True, closeConn=True)
+    lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = {final}".format(final=finalList.strip()), client, message=message, connection=conn, checkExists=False, commit=True, closeConn=True)
 
     await lib.reaction.reactThumbsUp(message, client)
   else:

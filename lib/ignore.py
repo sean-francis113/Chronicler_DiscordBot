@@ -22,7 +22,7 @@ async def addUserToIgnoreList(message,client):
 				ignoredUsers.append(dict(zip(dict_user_keys, combination)))
 	conn = lib.db.connectToDatabase()
 	for user in ignoredUsers:
-		lib.db.queryDatabase("INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES ({user_name}, {user_id})".format(channel_id=message.channel.id, user_name=user.name, user_id=user.id), connection=conn, commit=False, checkExists=True)
+		await lib.db.queryDatabase("INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES ({user_name}, {user_id})".format(channel_id=message.channel.id, user_name=user.name, user_id=user.id), connection=conn, commit=False, checkExists=True)
 	conn.cursor.commit()
 	conn.close()
 	
@@ -31,10 +31,10 @@ async def addUserToIgnoreList(message,client):
 #Gets the List of Ignored Users, if any, of the Story from the Database
 #channel: The Channel to pull the Users from
 #Returns: A tuple array of {username, userID}
-def getIgnoredUsers(channel):
+def getIgnoredUsers(channel, client):
 	userList = []
 	dict_user_keys = ['name', 'id']
-	rowCount, selectedRows, exists = lib.db.queryDatabase("SELECT name, id FROM {id}_ignoredUsers".format(id=channel.id), checkExists=True, tablename="{id}_ignoredUsers".format(id=channel.id), getResult=True, closeConn=True)
+	rowCount, selectedRows, exists = lib.db.queryDatabase("SELECT name, id FROM {id}_ignoredUsers".format(id=channel.id), client, channel=channel, checkExists=True, tablename="{id}_ignoredUsers".format(id=channel.id), getResult=True, closeConn=True)
 	
 	if rowCount == 0 or exists == False:
 		return userList

@@ -2,7 +2,7 @@ import lib.db
 import lib.reaction
 
 async def displayChannelStats(message, client):
-	rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM chronicles_info WHERE channel_id = {id}".format(id=message.channel.id), checkExists=True, tablename="chronicles_info", getResult=True, commit=False, closeConn=True)
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM chronicles_info WHERE channel_id = {id}".format(id=message.channel.id), client, message=message, checkExists=True, tablename="chronicles_info", getResult=True, commit=False, closeConn=True)
 	
 	if exists == False:
 		await lib.reaction.reactThumbsDown(message, client)
@@ -15,7 +15,7 @@ async def displayChannelStats(message, client):
 			if retval['is_blacklisted'] == True:
 				await client.send_message(message.channel, "This channel has been blacklisted. You can no longer get its stats.")
 			else:
-				rowCount, contentData, exists = lib.db.queryDatabase("SELECT * FROM {id}_contents".format(id=message.channel.id), checkExists=True, tablename="{id}_contents".format(id=message.channel.id), closeConn=True)
+				rowCount, contentData, exists = lib.db.queryDatabase("SELECT * FROM {id}_contents".format(id=message.channel.id), client, message=message, checkExists=True, tablename="{id}_contents".format(id=message.channel.id), closeConn=True)
 				
 				messageStr = ('Stats for ' + message.channel.name + '/n/n'
       	'Is Closed = ' + str(retval['is_closed']) + '\n'
