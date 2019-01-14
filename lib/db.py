@@ -26,14 +26,12 @@ def connectToDatabase():
 #commit: Do We Want to Commit the Query?
 #getResult: Do We Need to Get Some Sort of Result?
 #Returns: A Tuple of How Many Rows Were Found, The Result of the Query and if Table Exists, rowCount = 0, result=None and exists=False Otherwise
-def queryDatabase(query, client, message=None, channel=None, connection=None, checkExists=True, tablename=None, reportExistance=False, commit=False, getResult=False, closeConn=True):
+def queryDatabase(query, client, channel=None, connection=None, checkExists=True, tablename=None, reportExistance=False, commit=False, getResult=False, closeConn=True):
 	if checkExists == True:
 		if (tablename == "" or tablename is None) or checkIfTableExists(connectToDatabase().cursor(), tablename) == False:
 			if(reportExistance):
 				if(channel != None):
 					lib.error.postError(client, channel, "ERROR #1021: If you are seeing this Error Message, please email us immediately by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com. Include this Error Number and what you were doing right before the message.")
-				elif(message != None):
-					lib.error.postError(client, message.channel, "ERROR #1021: If you are seeing this Error Message, please email us immediately by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com. Include this Error Number and what you were doing right before the message.")
 			return 0, None, False
 
 	try:
@@ -65,57 +63,39 @@ def queryDatabase(query, client, message=None, channel=None, connection=None, ch
 
 	except pymysql.MySQLError as e:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the database operation. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the database operation. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the database operation. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
 
 	except pymysql.InterfaceError as e:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the Database Interface. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the Database Interface. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the Database Interface. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
 
 	except pymysql.DatabaseError as e:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the Database itself. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the Database itself. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened with the Database itself. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
 
 	except pymysql.DataError as e:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then what was sent to the database was not valid. In most cases, the message became too long. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then what was sent to the database was not valid. In most cases, the message became too long. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then what was sent to the database was not valid. In most cases, the message became too long. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
 
 	except pymysql.OperationalError:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened that is beyond our control. Unfortunately, in this case, there is nothing that can be done except retry in a few minutes.")
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened that is beyond our control. Unfortunately, in this case, there is nothing that can be done except retry in a few minutes.")
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something happened that is beyond our control. Unfortunately, in this case, there is nothing that can be done except retry in a few minutes.")
 
 	except pymysql.IntegrityError as e:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something has happened to the integrity of the Database. Please immediately email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something has happened to the integrity of the Database. Please immediately email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something has happened to the integrity of the Database. Please immediately email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
 
 	except pymysql.InternalError as e:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something has happened internally. Please immediately email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something has happened internally. Please immediately email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then something has happened internally. Please immediately email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
 
 	except pymysql.ProgrammingError as e:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then you managed to find a glitch in the system that we missed. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then you managed to find a glitch in the system that we missed. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then you managed to find a glitch in the system that we missed. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
 
 	except pymysql.NotSupportedError as e:
 		if(channel != None):
-			lib.error.postError(channel, "ERROR #{errorNum}: If you are seeing this Error Message, then we are trying to do something that is no longer supported by the Database. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
-		elif(message != None):
-			lib.error.postError(message.channel, "ERROR #{errorNum}: If you are seeing this Error Message, then we are trying to do something that is no longer supported by the Database. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
+			lib.error.postError(client, channel, "ERROR #{errorNum}: If you are seeing this Error Message, then we are trying to do something that is no longer supported by the Database. Please email us by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com and we will get to it as soon as possible. Include the following in the email: '{errorMessage}'".format(errorNum=e.args[0], errorMessage=e))
 
 
 #Checks to See if the Provided Table Exists

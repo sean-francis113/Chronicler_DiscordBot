@@ -58,6 +58,7 @@ async def on_message(message):
 	if validUser is True:
 		#If a Command Was Typed In
 		if (message.content.startswith('!c')):
+			await lib.reaction.reactWrench(message, client)
 			#Get the Arguments by Splitting on Spaces
 			args = message.content.split(' ')
 			#Show Welcome Command
@@ -68,7 +69,7 @@ async def on_message(message):
 				await lib.h.showHelp(message, client)
       #Rewrite Chronicle Command
 			elif (args[1] == 'rewrite'):
-				await lib.record.startRewrite(message, client)
+				await lib.record.startRewrite(message, client, "", None)
       #Set Channel Privacy Command
 			elif (args[1] == 'set_private'):
 				await lib.privacy.setPrivacy(message, client)
@@ -106,7 +107,7 @@ async def on_message(message):
 			elif (args[1] == 'ignore'):
 				await lib.ignore.sendIgnoreReaction(message, client)
       #Add User to Ignore List Command
-			elif (args[1] == 'ignore_user'):
+			elif (args[1] == 'ignore_users'):
 				await lib.ignore.addUserToIgnoreList(message, client)
       #Post Link to Chronicle Command
 			elif (args[1] == 'get_link'):
@@ -129,6 +130,7 @@ async def on_message(message):
 			#Make Sure The Chronicle Can Record
 			canPost = lib.validation.checkIfCanPost(message, client)
 			if canPost is True:
+				await lib.reaction.reactWrench(message, client)
 				await lib.record.postToDatabase(message, client)
 
 #Keep the Bot Alive

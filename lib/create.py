@@ -142,30 +142,30 @@ async def createChroniclerChannel(message, client, createNew=True):
 	conn = lib.db.connectToDatabase()
 
 	#Create Channel Tables
-	lib.db.queryDatabase("CREATE TABLE {id}_contents (entry_id INT AUTO_INCREMENT PRIMARY KEY, entry_type VARCHAR(255) NOT NULL DEFAULT(\"In-Character\"), char_count INT NOT NULL, word_count INT NOT NULL, entry_owner TEXT, entry_editted MEDIUMTEXT, entry_original MEDIUMTEXT)".format(id=chroniclerChannel.id), client, message=message, connection=conn, checkExists=False, closeConn=False)
-	lib.db.queryDatabase("CREATE TABLE {id}_keywords (kw_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, word TEXT NOT NULL, replacement TEXT NOT NULL)".format(id=chroniclerChannel.id), client, message=message, checkExists=False, closeConn=False)
-	lib.db.queryDatabase("CREATE TABLE {id}_ignoredUsers (iu_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, name TEXT NOT NULL, id TEXT NOT NULL)".format(id=chroniclerChannel.id), client, message=message, checkExists=False, closeConn=False)
-	lib.db.queryDatabase("CREATE TABLE {id}_ignoredSymbols (is_id INT AUTO_INCREMENT PRIMARY KEY, start VARCHAR(50) NOT NULL, end VARCHAR(50) NOT NULL)".format(id=chroniclerChannel.id), client, message=message, checkExists=False, closeConn=False)
+	lib.db.queryDatabase("CREATE TABLE {id}_contents (entry_id INT AUTO_INCREMENT PRIMARY KEY, entry_type VARCHAR(255) NOT NULL DEFAULT(\"In-Character\"), char_count INT NOT NULL, word_count INT NOT NULL, entry_owner TEXT, entry_editted MEDIUMTEXT, entry_original MEDIUMTEXT)".format(id=chroniclerChannel.id), client, channel=message.channel, connection=conn, checkExists=False, closeConn=False)
+	lib.db.queryDatabase("CREATE TABLE {id}_keywords (kw_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, word TEXT NOT NULL, replacement TEXT NOT NULL)".format(id=chroniclerChannel.id), client, channel=message.channel, checkExists=False, closeConn=False)
+	lib.db.queryDatabase("CREATE TABLE {id}_ignoredUsers (iu_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, name TEXT NOT NULL, id TEXT NOT NULL)".format(id=chroniclerChannel.id), client, channel=message.channel, checkExists=False, closeConn=False)
+	lib.db.queryDatabase("CREATE TABLE {id}_ignoredSymbols (is_id INT AUTO_INCREMENT PRIMARY KEY, start VARCHAR(50) NOT NULL, end VARCHAR(50) NOT NULL)".format(id=chroniclerChannel.id), client, channel=message.channel, checkExists=False, closeConn=False)
   
 	#Add New Channel Into chronicles_info
-	lib.db.queryDatabase("INSERT INTO chronicles_info (channel_id, is_blacklisted, is_private, is_closed, channel_name, channel_owner, has_warnings, warning_list, date_last_modified) VALUES (\"{id}\", FALSE, {private}, FALSE, \"{name}\", \"{owner}\", {has_warn}, \"{warn_list}\", \"{datetime}\")".format(id=chroniclerChannel.id, private=str(isPrivate).upper(), name=channelName, owner=message.author.name, has_warn=str(hasWarnings).upper(), warn_list=warnings, datetime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), client, message=message, checkExists=True, tablename="chronicles_info", commit=True, closeConn=False)
+	lib.db.queryDatabase("INSERT INTO chronicles_info (channel_id, is_blacklisted, is_private, is_closed, channel_name, channel_owner, has_warnings, warning_list, date_last_modified) VALUES (\"{id}\", FALSE, {private}, FALSE, \"{name}\", \"{owner}\", {has_warn}, \"{warn_list}\", \"{datetime}\")".format(id=chroniclerChannel.id, private=str(isPrivate).upper(), name=channelName, owner=message.author.name, has_warn=str(hasWarnings).upper(), warn_list=warnings, datetime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), client, channel=message.channel, checkExists=True, tablename="chronicles_info", commit=True, closeConn=False)
 
 	#Add Any Specified Keywords
 	if(len(keywords) > 0):
 		for index in keywords:
-			lib.db.queryDatabase("INSERT INTO {id}_keywords (word, replacement) VALUES (\"{word}\", \"{replacement}\")".format(id=chroniclerChannel.id, word=index['word'], replacement=index['replacement']), client, message=message, connection=conn, checkExists=True, tablename="{id}_keywords".format(id=chroniclerChannel.id), commit=False, closeConn=False)
+			lib.db.queryDatabase("INSERT INTO {id}_keywords (word, replacement) VALUES (\"{word}\", \"{replacement}\")".format(id=chroniclerChannel.id, word=index['word'], replacement=index['replacement']), client, channel=message.channel, connection=conn, checkExists=True, tablename="{id}_keywords".format(id=chroniclerChannel.id), commit=False, closeConn=False)
 		conn.commit()
 
 	#Add Any Specified Users to Ignore
 	if(len(ignoredUsers) > 0):
 		for index in ignoredUsers:
-			lib.db.queryDatabase("INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES (\"{user_name}\", \"{user_id}\")".format(channel_id=chroniclerChannel.id, user_name=index['name'], user_id=index['id']), client, message=message, connection=conn, checkExists=True, tablename="{id}_ignoredUsers".format(id=chroniclerChannel.id), commit=False, closeConn=False)
+			lib.db.queryDatabase("INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES (\"{user_name}\", \"{user_id}\")".format(channel_id=chroniclerChannel.id, user_name=index['name'], user_id=index['id']), client, channel=message.channel, connection=conn, checkExists=True, tablename="{id}_ignoredUsers".format(id=chroniclerChannel.id), commit=False, closeConn=False)
 		conn.commit()
 
 	#Add Any Specified Symbols to Ignore
 	if(len(ignoredSymbols) > 0):
 		for index in ignoredSymbols:
-			lib.db.queryDatabase("INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")".format(id=chroniclerChannel.id, start=index['start'], end=index['end']), client, message=message, connection=conn, checkExists=True, tablename="{id}_ignoredSymbols".format(id=chroniclerChannel.id), commit=False, closeConn=False)
+			lib.db.queryDatabase("INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")".format(id=chroniclerChannel.id, start=index['start'], end=index['end']), client, channel=message.channel, connection=conn, checkExists=True, tablename="{id}_ignoredSymbols".format(id=chroniclerChannel.id), commit=False, closeConn=False)
 		conn.commit()
 
 	#Send Welcome and Help Messages into New Channel

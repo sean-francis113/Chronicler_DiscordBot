@@ -7,16 +7,16 @@ async def addKeyword(message, client):
 	
 	conn = lib.db.connectToDatabase()
 	
-	rowCount, result, exists = lib.db.queryDatabase("SELECT keyword FROM {id}_keywords WHERE keyword=\"{word}\"".format(id=message.channel.id, word=keywordValues[0].strip()), client, message=message, connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
+	rowCount, result, exists = lib.db.queryDatabase("SELECT word FROM {id}_keywords WHERE word=\"{word}\"".format(id=message.channel.id, word=keywordValues[0].strip()), client, channel=message.channel, connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
 	
 	if exists == False:
 		conn.close()
 		return
 	else:
-		if rowCount == 0 and exists == True:
-			lib.db.queryDatabase("INSERT INTO {id}_keywords (keyword,replacement) VALUES (\"{word}\", \"{replacement}\")".format(id=message.channel.id, word=keywordValues[0].strip(), replacement=keywordValues[1].strip()), client, message=message, connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
+		if rowCount == 0:
+			lib.db.queryDatabase("INSERT INTO {id}_keywords (word,replacement) VALUES (\"{word}\", \"{replacement}\")".format(id=message.channel.id, word=keywordValues[0].strip(), replacement=keywordValues[1].strip()), client, channel=message.channel, connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
 		else:
-			lib.db.queryDatabase("UPDATE {id}_keywords SET replacement=\"{replacement}\" WHERE keyword=\"{word}\";".format(id=message.channel.id, replacement=keywordValues[1].strip(), word=keywordValues[0].strip()), client, message=message, connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
+			lib.db.queryDatabase("UPDATE {id}_keywords SET replacement=\"{replacement}\" WHERE word=\"{word}\";".format(id=message.channel.id, replacement=keywordValues[1].strip(), word=keywordValues[0].strip()), client, channel=message.channel, connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
 			
 	conn.close()
 	await lib.reaction.reactThumbsUp(message, client)
@@ -26,14 +26,14 @@ async def removeKeyword(message, client):
 	
 	conn = lib.db.connectToDatabase()
 	
-	rowCount, retval, exists = lib.db.queryDatabase("SELECT keyword FROM {id}_keywords WHERE keyword=\"{word}\"".format(id=message.channel.id, word=value.strip()), client, message=message, connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT word FROM {id}_keywords WHERE word=\"{word}\"".format(id=message.channel.id, word=value.strip()), client, channel=message.channel, connection=conn, checkExists=True, tablename="{id}_keywords".format(id=message.channel.id), getResult=True)
 	
 	if exists == False:
 		conn.close()
 		return
 	else:
 		if rowCount == 1:
-			lib.db.queryDatabase("DELETE FROM {id}_keywords WHERE keyword=\"{word}\"".format(id=message.channel.id, word=value.strip()), client, message=message, connection=conn, checkExists=False, commit=True)
+			lib.db.queryDatabase("DELETE FROM {id}_keywords WHERE word=\"{word}\"".format(id=message.channel.id, word=value.strip()), client, channel=message.channel, connection=conn, checkExists=False, commit=True)
 			await lib.reaction.reactThumbsUp(message, client)
 		elif rowCount == 0:
 			await lib.reaction.reactThumbsDown(message, client)
@@ -47,15 +47,22 @@ async def removeKeyword(message, client):
 def getKeywords(client, channel):
 	wordList = []
 	rowCount, retval, exists = lib.db.queryDatabase("SELECT word,replacement FROM {id}_keywords".format(id=channel.id), client, channel=channel, checkExists=True, tablename="{id}_keywords".format(id=channel.id), getResult=True, closeConn=True)
+
+	print("Retrieved Keywords")
 	
 	if rowCount == 0:
 		return wordList
 	else:
 		i = 0
-		while i < len(retval):
-			combination = (retval[i], retval[i + 1])
-			wordList.append(combination)
-			i = i + 2
+		if(rowCount == 1):
+			while i < len(retval):
+				combination = (retval[i], retval[i + 1])
+				wordList.append(combination)
+				i += 2
+		else:
+			while i < rowCount:
+				wordList.append(retval[i])
+				i += 1
 		return wordList
 
 #Searches through the String, replacing all instances of 'keyword' with 'replacement'

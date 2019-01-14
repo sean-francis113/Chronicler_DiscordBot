@@ -3,13 +3,13 @@ import lib.reaction
 
 async def closeStory(message, client):
   #Connect to Database
-  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed = TRUE WHERE channel_id = {id};".format(id=message.channel.id), client, message=message, checkExists=True, tablename="chronicles_info", commit=True, closeConn=True)
+  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed = TRUE WHERE channel_id = {id};".format(id=message.channel.id), client, channel=message.channel, checkExists=True, tablename="chronicles_info", commit=True, closeConn=True)
 
   await lib.reaction.reactThumbsUp(message, client)
 
 async def openStory(message, client):
   #Connect to Database
-  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed = FALSE WHERE channel_id = {id};".format(id=message.channel.id), client, message=message, checkExists=True, tablename="chronicles_info", commit=True, closeConn=True)
+  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed = FALSE WHERE channel_id = {id};".format(id=message.channel.id), client, channel=message.channel, checkExists=True, tablename="chronicles_info", commit=True, closeConn=True)
 
   await lib.reaction.reactThumbsUp(message, client)
 
@@ -21,16 +21,22 @@ def editChronicle(client, oldMessage, newMessage):
   #Connect to Database
 	connection = lib.db.connectToDatabase()
 	
-	rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM {id}_contents".format(newMessage.channel.id), client, message=oldMessage, connection=connection, checkExists=True, tablename="{id}_contents".format(id=oldMessage.channel.id), getResult=True, closeConn=False)
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT * FROM {id}_contents".format(id=newMessage.channel.id), client, channel=oldMessage.channel, connection=connection, checkExists=True, tablename="{id}_contents".format(id=oldMessage.channel.id), getResult=True, closeConn=False)
 	
 	for row in retval:
-		if row['entry_original'] == newMessage.content:
-			lib.db.queryDatabase("UPDATE {id}_contents SET entry_original = {new} WHERE entry_id = {entry_id}".format(id=newMessage.channel.id, new=newMessage.content, entry_id=row['entry_id']), client, message=oldMessage, connection=connection, commit=False, closeConn=False)
+		print(row[5])
+		#0 = entry_id
+		#5 = entry_original
+		if row[5] == oldMessage.content:
+			print("Found Row")
+			lib.db.queryDatabase("UPDATE {id}_contents SET entry_original = {new} WHERE entry_id = {entry_id}".format(id=newMessage.channel.id, new=newMessage.content, entry_id=row[0]), client, channel=oldMessage.channel, connection=connection, commit=False, closeConn=False)
 
 			editted_content = newMessage.content
-			word_list = lib.keywords.getKeywords(newMessage.channel)
+			word_list = lib.keywords.getKeywords(client, newMessage.channel)
 
 			for word in word_list:
-				editted_content = lib.keywords.replaceKeyword(editted_content, word['word'], word['replacement'])
+				#0 = word
+				#1 = replacement
+				editted_content = lib.keywords.replaceKeyword(editted_content, word[0], word[1])
 
-			lib.db.queryDatabase("UPDATE {id}_contents SET entry_editted = {new} WHERE entry_id = {entry_id}".format(id=newMessage.channel.id, new=editted_content, entry_id=row['entry_id']), client, message=oldMessage, connection=connection, commit=True)
+			lib.db.queryDatabase("UPDATE {id}_contents SET entry_editted = {new} WHERE entry_id = {entry_id}".format(id=newMessage.channel.id, new=editted_content, entry_id=row[0]), client, channel=oldMessage.channel, connection=connection, commit=True)

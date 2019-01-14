@@ -6,16 +6,16 @@ async def addSymbol(message, client):
 	
 	conn = lib.db.connectToDatabase()
 	
-	rowCount, result, exists = lib.db.queryDatabase("SELECT start FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(id=message.channel.id, start=symbolValues[0].strip()), client, message=message, connection=conn, checkExists=True, tablename="{id}_ignoredSymbols".format(id=message.channel.id), getResult=True, closeConn=False)
+	rowCount, result, exists = lib.db.queryDatabase("SELECT start FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(id=message.channel.id, start=symbolValues[0].strip()), client, channel=message.channel, connection=conn, checkExists=True, tablename="{id}_ignoredSymbols".format(id=message.channel.id), getResult=True, closeConn=False)
 	
 	if exists == False:
 		conn.close()
 		return
 	else:
 		if rowCount == 0:
-			lib.db.queryDatabase("INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")".format(id=message.channel.id, start=symbolValues[0].strip(), end=symbolValues[1].strip()), client, message=message, connection=conn, checkExists=False, tablename="{id}_ignoredSymbols".format(id=message.channel.id), commit=True, closeConn=True)
+			lib.db.queryDatabase("INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")".format(id=message.channel.id, start=symbolValues[0].strip(), end=symbolValues[1].strip()), client, channel=message.channel, connection=conn, checkExists=False, tablename="{id}_ignoredSymbols".format(id=message.channel.id), commit=True, closeConn=True)
 		else:
-			lib.db.queryDatabase("UPDATE {id}_ignoredSymbols SET end=\"{end}\" WHERE start=\"{start}\"".format(id=message.channel.id, start=symbolValues[0].strip(), end=symbolValues[1].strip()), client, message=message, connection=conn, checkExists=False, tablename="{id}_ignoredSymbols".format(id=message.channel.id), commit=True, closeConn=True)
+			lib.db.queryDatabase("UPDATE {id}_ignoredSymbols SET end=\"{end}\" WHERE start=\"{start}\"".format(id=message.channel.id, start=symbolValues[0].strip(), end=symbolValues[1].strip()), client, channel=message.channel, connection=conn, checkExists=False, tablename="{id}_ignoredSymbols".format(id=message.channel.id), commit=True, closeConn=True)
 
 	await lib.reaction.reactThumbsUp(message, client)
 
@@ -24,30 +24,31 @@ async def removeSymbol(message, client):
 	
 	conn = lib.db.connectToDatabase()
 	
-	rowCount, retval, exists = lib.db.queryDatabase("SELECT start FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(id=message.channel.id, start=value.strip()), client, message=message, connection=conn, checkExists=True, tablename="{id}_ignoredSymbols".format(id=message.channel.id), getResult=True, closeConn=False)
+	rowCount, retval, exists = lib.db.queryDatabase("SELECT start FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(id=message.channel.id, start=value.strip()), client, channel=message.channel, connection=conn, checkExists=True, tablename="{id}_ignoredSymbols".format(id=message.channel.id), getResult=True, closeConn=False)
 	
 	if exists == False:
 		conn.close()
 		return
 	else:
 		if rowCount == 1:
-			lib.db.queryDatabase("DELETE FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(id=message.channel.id, start=value.strip()), client, message=message, connection=conn, checkExists=False, commit=True, closeConn=True)
+			lib.db.queryDatabase("DELETE FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(id=message.channel.id, start=value.strip()), client, channel=message.channel, connection=conn, checkExists=False, commit=True, closeConn=True)
 			await lib.reaction.reactThumbsUp(message, client)
 		elif rowCount == 0:
 			await lib.reaction.reactThumbsDown(message, client)
 			await client.send_message(message.channel, "The Chronicler could not find the symbol in its database for this channel. Did you type it correctly? If you are, make sure it is a symbol that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue.")
 
-def pluckSymbols(start, end, string, removeInside=True):
-	edittedString = string
-	startIndex = string.find(start)
+def pluckSymbols(string, start, end, removeInside=True):
+	strToEdit = string
+	startIndex = strToEdit.find(start)
 	if startIndex > -1:
-		endIndex = string.find(end)
+		endIndex = strToEdit.find(end)
 		if endIndex > startIndex:
 			if removeInside == True:
-				edittedString = string[:startIndex] + string[(endIndex + len(end)):]
+				strToEdit = strToEdit[:startIndex] + strToEdit[(endIndex + len(end)):]
 			else:
-					edittedString = string[:startIndex]+ string[(startIndex + len(start)):endIndex] + string[(endIndex + len(end)):]
-	return ' '.join(edittedString.split())
+				strToEdit = strToEdit[:startIndex]+ strToEdit[(startIndex + len(start)):endIndex] + strToEdit[(endIndex + len(end)):]
+			strToEdit = pluckSymbols(' '.join(strToEdit.split()), start, end)
+	return strToEdit
 
 def getSymbols(client, channel):
 	symbolList = []
@@ -57,8 +58,13 @@ def getSymbols(client, channel):
 		return symbolList
 	else:
 		i = 0
-		while i < len(retval):
-			combination = (retval[0], retval[1])
-			symbolList.append(combination)
-			i = i + 2
+		if(rowCount == 1):
+			while i < len(retval):
+				combination = (retval[i], retval[i + 1])
+				symbolList.append(combination)
+				i += 2
+		else:
+			while i < rowCount:
+				symbolList.append(retval[i])
+				i += 1
 		return symbolList

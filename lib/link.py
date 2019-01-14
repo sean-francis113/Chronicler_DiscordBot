@@ -2,7 +2,7 @@ import lib.db
 import lib.reaction
 
 async def getChronicle(message, client):
-  rowCount, retval, exists = lib.db.queryDatabase("SELECT is_blackmailed FROM chronicles_info WHERE channel_id={id}".format(id=message.channel.id), client, message=message, checkExists=True, tablename="chronicles_info", commit=False, closeConn=True)
+  rowCount, retval, exists = lib.db.queryDatabase("SELECT is_blackmailed FROM chronicles_info WHERE channel_id={id}".format(id=message.channel.id), client, channel=message.channel, checkExists=True, tablename="chronicles_info", commit=False, closeConn=True)
 
   if rowCount == 1:
     if retval['is_blackmailed'] == False:
