@@ -1,7 +1,8 @@
 import lib.reaction
+import commandList as cmd
 
-async def addSymbol(message, client):
-	value = message.content.replace('!c add_symbol ', '')
+async def addSymbol(client, message):
+	value = message.content.replace('' + cmd.prefix + ' ' + cmd.add_symbol, '')
 	symbolValues = value.split('|')
 	
 	conn = lib.db.connectToDatabase()
@@ -17,10 +18,10 @@ async def addSymbol(message, client):
 		else:
 			lib.db.queryDatabase("UPDATE {id}_ignoredSymbols SET end=\"{end}\" WHERE start=\"{start}\"".format(id=message.channel.id, start=symbolValues[0].strip(), end=symbolValues[1].strip()), client, channel=message.channel, connection=conn, checkExists=False, tablename="{id}_ignoredSymbols".format(id=message.channel.id), commit=True, closeConn=True)
 
-	await lib.reaction.reactThumbsUp(message, client)
+	await lib.reaction.reactThumbsUp(client, message)
 
-async def removeSymbol(message, client):
-	value = message.content.replace('!c remove_symbol', '')
+async def removeSymbol(client, message):
+	value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_keyword, '')
 	
 	conn = lib.db.connectToDatabase()
 	
@@ -32,9 +33,9 @@ async def removeSymbol(message, client):
 	else:
 		if rowCount == 1:
 			lib.db.queryDatabase("DELETE FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(id=message.channel.id, start=value.strip()), client, channel=message.channel, connection=conn, checkExists=False, commit=True, closeConn=True)
-			await lib.reaction.reactThumbsUp(message, client)
+			await lib.reaction.reactThumbsUp(client, message)
 		elif rowCount == 0:
-			await lib.reaction.reactThumbsDown(message, client)
+			await lib.reaction.reactThumbsDown(client, message)
 			await client.send_message(message.channel, "The Chronicler could not find the symbol in its database for this channel. Did you type it correctly? If you are, make sure it is a symbol that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue.")
 
 def pluckSymbols(string, start, end, removeInside=True):

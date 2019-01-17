@@ -1,4 +1,4 @@
-async def showWelcome(message, client):
+async def showWelcome(client, message):
   welcomeString = []
 
   welcomeString.append('The Chronicler Says Hello!\n\n'

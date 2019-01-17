@@ -5,8 +5,9 @@ import lib.h
 import lib.w
 import lib.record
 import lib.reaction
+import commandList as cmd
 
-async def createChroniclerChannel(message, client, createNew=True):
+async def createChroniclerChannel(client, message, createNew=True):
 	#Initialize Variables
 	isPrivate = False
 	dict_word_keys = ['word', 'replacement']
@@ -51,7 +52,8 @@ async def createChroniclerChannel(message, client, createNew=True):
 	willRewrite = False
 
 	#Parse out options, if any
-	channelOptionsStr = message.content.replace('!c create_channel ', '')
+	channelOptionsStr = message.content.replace('' + cmd.prefix + ' ' + cmd.create_channel, '')
+	channelOptionsStr = message.content.replace('' + cmd.prefix + ' ' + cmd.whitelist_channel, '')
 	if(channelOptionsStr.find('=') != -1):
 		channelOptionsStr = channelOptionsStr.replace('; ', ';')
 		channelOptionsArr = channelOptionsStr.split(';')
@@ -178,10 +180,10 @@ async def createChroniclerChannel(message, client, createNew=True):
 
 	#Rewrite the Chroncile if User Wishes
 	if willRewrite == True:
-		await lib.record.startRewrite(message, client)
+		await lib.record.startRewrite(client, message)
 
 	conn.cursor().close()
 	conn.close()
 
 	#Tell User We Are Done
-	await lib.reaction.reactThumbsUp(message, client)
+	await lib.reaction.reactThumbsUp(client, message)

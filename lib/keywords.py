@@ -1,8 +1,9 @@
 import lib.db
 import lib.reaction
+import commandList as cmd
 
-async def addKeyword(message, client):
-	value = message.content.replace('!c add_keyword', '')
+async def addKeyword(client, message):
+	value = message.content.replace('' + cmd.prefix + ' ' + cmd.add_keyword, '')
 	keywordValues = value.split('|')
 	
 	conn = lib.db.connectToDatabase()
@@ -19,10 +20,10 @@ async def addKeyword(message, client):
 			lib.db.queryDatabase("UPDATE {id}_keywords SET replacement=\"{replacement}\" WHERE word=\"{word}\";".format(id=message.channel.id, replacement=keywordValues[1].strip(), word=keywordValues[0].strip()), client, channel=message.channel, connection=conn, checkExists=False, tablename="{id}_keywords".format(id=message.channel.id), commit=True)
 			
 	conn.close()
-	await lib.reaction.reactThumbsUp(message, client)
+	await lib.reaction.reactThumbsUp(client, message)
 
-async def removeKeyword(message, client):
-	value = message.content.replace('!c remove_keyword', '')
+async def removeKeyword(client, message):
+	value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_keyword, '')
 	
 	conn = lib.db.connectToDatabase()
 	
@@ -34,9 +35,9 @@ async def removeKeyword(message, client):
 	else:
 		if rowCount == 1:
 			lib.db.queryDatabase("DELETE FROM {id}_keywords WHERE word=\"{word}\"".format(id=message.channel.id, word=value.strip()), client, channel=message.channel, connection=conn, checkExists=False, commit=True)
-			await lib.reaction.reactThumbsUp(message, client)
+			await lib.reaction.reactThumbsUp(client, message)
 		elif rowCount == 0:
-			await lib.reaction.reactThumbsDown(message, client)
+			await lib.reaction.reactThumbsDown(client, message)
 			await client.send_message(message.channel, "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly? If you are, make sure it is a keyword that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue.")
 
 	conn.close()

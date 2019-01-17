@@ -1,8 +1,9 @@
 import lib.db
 import lib.reaction
+import commandList as cmd
 
-async def setWarnings(message, client):
-  value = message.content.replace("!c set_warnings", '')
+async def setWarnings(client, message):
+  value = message.content.replace('' + cmd.prefix + ' ' + cmd.set_warning, '')
 
   #Connect to Database
   conn = lib.db.connectToDatabase()
@@ -14,10 +15,10 @@ async def setWarnings(message, client):
 
   lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = {list}".format(list=value.strip()), client, channel=message.channel, connection=conn, checkExists=False, commit=True, closeConn=True)
 
-  await lib.reaction.reactThumbsUp(message, client)
+  await lib.reaction.reactThumbsUp(client, message)
 
-async def addWarning(message, client):
-  value = message.content.replace("!c add_warning", '')
+async def addWarning(client, message):
+  value = message.content.replace('' + cmd.prefix + ' ' + cmd.add_warning, '')
 
   #Connect to Database
   conn = lib.db.connectToDatabase()
@@ -34,10 +35,10 @@ async def addWarning(message, client):
   lib.db.queryDatabase("UPDATE chronicles_info SET has_warning = TRUE WHERE channel_id = {id}".format(id=message.channel.id), client, channel=message.channel, connection=conn, checkExists=True, tablename="chronicles_info", commit=False, closeConn=False)
   lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = CONCAT(IFNULL(warning_list, ''), {add})".format(add=addition.strip()), client, channel=message.channel, connection=conn, checkExists=False, commit=True, closeConn=True)
 
-  await lib.reaction.reactThumbsUp(message, client)
+  await lib.reaction.reactThumbsUp(client, message)
 
-async def removeWarning(message, client):
-  value = message.content.replace("!c remove_warning", '')
+async def removeWarning(client, message):
+  value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_warning, '')
 
   #Connect to Database
   conn = lib.db.connectToDatabase()
@@ -63,6 +64,6 @@ async def removeWarning(message, client):
 
     lib.db.queryDatabase("UPDATE chronicles_info SET warning_list = {final}".format(final=finalList.strip()), client, channel=message.channel, connection=conn, checkExists=False, commit=True, closeConn=True)
 
-    await lib.reaction.reactThumbsUp(message, client)
+    await lib.reaction.reactThumbsUp(client, message)
   else:
     await client.sendMessage(message.channel, "The Chronicler did not find the warning you wish to remove. Are you sure you spelled it right?")

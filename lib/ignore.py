@@ -1,14 +1,15 @@
 import lib.db
 import lib.reaction
+import commandList as cmd
 
-async def sendIgnoreReaction(message, client):
-	await lib.reaction.reactThumbsUp(message, client)
+async def sendIgnoreReaction(client, message):
+	await lib.reaction.reactThumbsUp(client, message)
 
 async def addUserToIgnoreList(message,client):
 	ignoredUsers = []
 	dict_user_keys = ["name", "id"]
 	
-	value = message.content.replace('!c ignore_users', '')
+	value = message.content.replace('' + cmd.prefix + ' ' + cmd.ignore_users, '')
 	usersFound = value.split('|')
 	print(usersFound)
 	usersInServer = client.get_all_members()
@@ -32,7 +33,7 @@ async def addUserToIgnoreList(message,client):
 	conn.commit()
 	conn.close()
 	
-	await lib.reaction.reactThumbsUp(message, client)
+	await lib.reaction.reactThumbsUp(client, message)
 
 #Gets the List of Ignored Users, if any, of the Story from the Database
 #channel: The Channel to pull the Users from

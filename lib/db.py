@@ -26,7 +26,7 @@ def connectToDatabase():
 #commit: Do We Want to Commit the Query?
 #getResult: Do We Need to Get Some Sort of Result?
 #Returns: A Tuple of How Many Rows Were Found, The Result of the Query and if Table Exists, rowCount = 0, result=None and exists=False Otherwise
-def queryDatabase(query, client, channel=None, connection=None, checkExists=True, tablename=None, reportExistance=False, commit=False, getResult=False, closeConn=True):
+def queryDatabase(query, client, channel=None, connection=None, checkExists=False, tablename=None, reportExistance=False, commit=False, getResult=False, closeConn=True):
 	if checkExists == True:
 		if (tablename == "" or tablename is None) or checkIfTableExists(connectToDatabase().cursor(), tablename) == False:
 			if(reportExistance):

@@ -16,6 +16,7 @@ import lib.story
 import lib.validation
 import lib.w
 import lib.warning
+import commandList as cmd
 
 #Setting the Client
 client = discord.Client()
@@ -53,85 +54,94 @@ async def on_channel_delete(channel):
 async def on_message(message):
   #Confirm That the Message Was Sent By Someone Other Than Itself, or
   #Someone Not On the Channel's Ignored User List
-	validUser = lib.validation.validateUser(message, client)
+	validUser = lib.validation.validateUser(client, message)
 	#If the Message Author is Valid
 	if validUser is True:
 		#If a Command Was Typed In
-		if (message.content.startswith('!c')):
-			await lib.reaction.reactWrench(message, client)
+		if (message.content.startswith(cmd.prefix)):
+			await lib.reaction.reactWrench(client, message)
 			#Get the Arguments by Splitting on Spaces
 			args = message.content.split(' ')
 			#Show Welcome Command
-			if (args[1] == 'welcome'):
-				await lib.w.showWelcome(message, client)
+			if (args[1] == cmd.show_welcome):
+				await lib.w.showWelcome(client, message)
       #Show Help Command
-			elif (args[1] == 'help'):
-				await lib.h.showHelp(message, client)
+			elif (args[1] == cmd.show_help):
+				await lib.h.showHelp(client, message)
       #Rewrite Chronicle Command
-			elif (args[1] == 'rewrite'):
-				await lib.record.startRewrite(message, client, "", None)
+			elif (args[1] == cmd.rewrite_story):
+				await lib.record.startRewrite(client, message, "", None)
       #Set Channel Privacy Command
-			elif (args[1] == 'set_private'):
-				await lib.privacy.setPrivacy(message, client)
+			elif (args[1] == cmd.set_privacy):
+				await lib.privacy.setPrivacy(client, message)
 			#Add a New Keyword Command
-			elif (args[1] == 'add_keyword'):
-				await lib.keywords.addKeyword(message, client)
+			elif (args[1] == cmd.add_keyword):
+				await lib.keywords.addKeyword(client, message)
 			#Add a New Symbol Command
-			elif (args[1] == 'add_symbol'):
-				await lib.symbol.addSymbol(message, client)
+			elif (args[1] == cmd.add_symbol):
+				await lib.symbol.addSymbol(client, message)
       #Remove a Old Symbol Command
-			elif (args[1] == 'remove_symbol'):
-				await lib.symbol.removeSymbol(message, client)
+			elif (args[1] == cmd.remove_symbol):
+				await lib.symbol.removeSymbol(client, message)
 			#Remove an Old Keyword Command
-			elif (args[1] == 'remove_keyword'):
-				await lib.keywords.removeKeyword(message, client)
+			elif (args[1] == cmd.remove_keyword):
+				await lib.keywords.removeKeyword(client, message)
       #Close the Chronicle Command
-			elif (args[1] == 'close_story'):
-				await lib.story.closeStory(message, client)
+			elif (args[1] == cmd.close_story):
+				await lib.story.closeStory(client, message)
       #Reopen the Chronicle Command
-			elif (args[1] == 'open_story'):
-				await lib.story.openStory(message, client)
+			elif (args[1] == cmd.open_story):
+				await lib.story.openStory(client, message)
       #Set the Chronicle's Warnings Command
-			elif (args[1] == 'set_warnings'):
-				await lib.warning.setWarnings(message, client)
+			elif (args[1] == cmd.set_warning):
+				await lib.warning.setWarnings(client, message)
       #Add a New Chronicle Warning Command
-			elif (args[1] == 'add_warning'):
-				await lib.warning.addWarning(message, client)
+			elif (args[1] == cmd.add_warning):
+				await lib.warning.addWarning(client, message)
       #Remove an Old Chronicle Warning Command
-			elif (args[1] == 'remove_warning'):
-				await lib.warning.removeWarning(message, client)
+			elif (args[1] == cmd.remove_warning):
+				await lib.warning.removeWarning(client, message)
       #Create a New Channel Command
-			elif (args[1] == 'create_channel'):
-				await lib.create.createChroniclerChannel(message, client)
+			elif (args[1] == cmd.create_channel):
+				await lib.create.createChroniclerChannel(client, message)
       #Ignore Posted Message Command
-			elif (args[1] == 'ignore'):
-				await lib.ignore.sendIgnoreReaction(message, client)
+			elif (args[1] == cmd.ignore_message):
+				await lib.ignore.sendIgnoreReaction(client, message)
       #Add User to Ignore List Command
-			elif (args[1] == 'ignore_users'):
-				await lib.ignore.addUserToIgnoreList(message, client)
+			elif (args[1] == cmd.ignore_users):
+				await lib.ignore.addUserToIgnoreList(client, message)
       #Post Link to Chronicle Command
-			elif (args[1] == 'get_link'):
-				await lib.link.getChronicle(message, client)
+			elif (args[1] == cmd.story_link):
+				await lib.link.getChronicle(client, message)
       #Blacklist Channel Command
-			elif (args[1] == 'blacklist'):
-				await lib.blacklist.blacklistChronicle(message, client)
-      #Show Channel Stats Command
-			elif (args[1] == 'stats'):
-				await lib.stats.postChannelStats(message, client)
+			elif (args[1] == cmd.blacklist_channel):
+				await lib.blacklist.blacklistChronicle(client, message)
+      #Show Channel General Stats Command
+			elif (args[1] == cmd.stats_general):
+				await lib.stats.displayChannelStats(client, message)
+			#Show Channel's Keywords Command
+			elif (args[1] == cmd.stats_keywords):
+				await lib.stats.displayKeywords(client, message)
+			#Show Channel's Symbols Command
+			elif (args[1] == cmd.stats_symbols):
+				await lib.stats.displaySymbols(client, message)
+			#Show All Stats for Channel
+			elif (args[1] == cmd.stats_all):
+				await lib.stats.displayAllStats(client, message)
       #Add a Channel to Database Command
-			elif (args[1] == 'whitelist'):
-				await lib.create.addChannelToChronicler(message, client, createNew=False)
+			elif (args[1] == cmd.whitelist_channel):
+				await lib.create.addChannelToChronicler(client, message, createNew=False)
       #No Valid Command
 			else:
-				await lib.reaction.reactThumbsDown(message, client)
+				await lib.reaction.reactThumbsDown(client, message)
 				await postInvalidComment(message)
 		#No Command Found
 		else:
 			#Make Sure The Chronicle Can Record
-			canPost = lib.validation.checkIfCanPost(message, client)
+			canPost = lib.validation.checkIfCanPost(client, message)
 			if canPost is True:
-				await lib.reaction.reactWrench(message, client)
-				await lib.record.postToDatabase(message, client)
+				await lib.reaction.reactWrench(client, message)
+				await lib.record.postToDatabase(client, message)
 
 #Keep the Bot Alive
 lib.keep_alive.keep_alive()

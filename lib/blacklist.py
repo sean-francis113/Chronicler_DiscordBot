@@ -1,13 +1,14 @@
 #Import Statements
 import lib.db
 import lib.reaction
+import commandList as cmd
 
 #Blacklists the Chronicle, preventing any interaction from it again
 #message: The Message with the Command
 #client: The Bot Client
-async def blacklistChronicle(message, client):
+async def blacklistChronicle(client, message):
   #Remove Command From Message
-	value = message.content.replace("!c blacklist", '')
+	value = message.content.replace('' + cmd.prefix + ' ' + cmd.blacklist_channel, '')
   #Remove leading and ending whitespace from message
 	value = value.strip()
 	#If this is not the confirmation command
@@ -18,4 +19,4 @@ async def blacklistChronicle(message, client):
 		lib.db.queryDatabase("UPDATE chronicles_info SET is_blacklisted = TRUE WHERE channel_id={id};".format(id=message.channel.id), client, channel=message.channel, checkExists=True, tablename="chronicles_info", commit=True, closeConn=True)
 		
 		#Tell the User We're Done
-		await lib.reaction.reactThumbsUp(message, client)
+		await lib.reaction.reactThumbsUp(client, message)
