@@ -43,7 +43,7 @@ async def on_message_edit(before, after):
 @client.event
 async def on_channel_delete(channel):
   #Close Channel (assuming it is not blacklisted)
-  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed=TRUE WHERE channel_id={id};".format(id=channel.id), client, channel=channel, commit=True,checkExists=True,tablename="chronicles_info")
+  lib.db.queryDatabase("UPDATE chronicles_info SET is_closed=TRUE WHERE channel_id={id};".format(id=channel.id), client, channel, commit=True,checkExists=True,tablename="chronicles_info")
 
 
 #Discord Event Called When a Message is Sent to the Server/Channel
@@ -70,7 +70,7 @@ async def on_message(message):
 				await lib.h.showHelp(client, message)
       #Rewrite Chronicle Command
 			elif (args[1] == cmd.rewrite_story):
-				await lib.record.startRewrite(client, message, "", None)
+				await lib.record.startRewrite(client, message)
       #Set Channel Privacy Command
 			elif (args[1] == cmd.set_privacy):
 				await lib.privacy.setPrivacy(client, message)
@@ -110,6 +110,9 @@ async def on_message(message):
       #Add User to Ignore List Command
 			elif (args[1] == cmd.ignore_users):
 				await lib.ignore.addUserToIgnoreList(client, message)
+			#Remove Users from Ignored List Command
+			elif (args[1] == cmd.remove_ignored_users):
+				await lib.ignore.removeIgnoredUsers(client, message)
       #Post Link to Chronicle Command
 			elif (args[1] == cmd.story_link):
 				await lib.link.getChronicle(client, message)

@@ -21,7 +21,8 @@ set_privacy = "set_private"
 #Ignore Commands
 ignore_message = "ignore"
 ignore_users = "ignore_users"
-	
+remove_ignored_users = "pull_ignored_users"
+
 #Warning Commands
 add_warning = "add_warning"
 remove_warning = "pull_warning"
