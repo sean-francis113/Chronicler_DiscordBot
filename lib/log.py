@@ -1,12 +1,15 @@
 import datetime
+import requests
+import os
 
 
 def openLogFile(channel):
-    filePath = ("logs/{channel_id}_{date}.txt".format(
+    filePath = ("{url}/logs/{channel_id}_{date}.txt".format(
+				url=os.environ.get("CHRONICLER_WEBSITE_URL"), 
         channel_id=channel.id,
         date=datetime.datetime.now().strftime("%Y-%m-%d")))
 
-    logFile = open(filePath, "a+")
+    logFile = requests.get(filePath)
 
     return logFile, filePath
 
@@ -19,9 +22,13 @@ def writeToLogFile(logFile, strToWrite):
     logFile.write(strToWrite)
 
 
-def updateLogFile(channel, strToWrite):
+def updateLogFile(channel, strToWrite, closeFile=True):
     logFile, filePath = openLogFile(channel)
 
     writeToLogFile(logFile, strToWrite)
 
-    closeLogFile(logFile)
+    if closeFile == True:
+        closeLogFile(logFile)
+        return
+    else:
+        return logFile

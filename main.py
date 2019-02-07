@@ -10,6 +10,7 @@ import lib.ignore
 import lib.keywords
 import lib.link
 import lib.privacy
+import lib.progress
 import lib.record
 import lib.stats
 import lib.story
@@ -60,17 +61,21 @@ async def on_message(message):
 		#If a Command Was Typed In
 		if (message.content.startswith(cmd.prefix)):
 			await lib.reaction.reactWrench(client, message)
+			progressMessage = await lib.progress.createProgressMessage(client, message.channel, "Found Command. Reading Command.")
 			#Get the Arguments by Splitting on Spaces
 			args = message.content.split(' ')
 			#Show Welcome Command
 			if (args[1] == cmd.show_welcome):
+				await lib.progress.updateProgressMessage(client, progressMessage, "Found Show Welcome Command. Posting Welcome Message.")
 				await lib.w.showWelcome(client, message)
+				await lib.progress.updateProgressMessage(client, progressMessage, "Welcome Posted. This Message Will Be Deleted Soon.")
+				await lib.progress.waitThenDeleteProgressMessage(client, progressMessage, 10)
       #Show Help Command
 			elif (args[1] == cmd.show_help):
 				await lib.h.showHelp(client, message)
       #Rewrite Chronicle Command
 			elif (args[1] == cmd.rewrite_story):
-				await lib.record.startRewrite(client, message)
+				await lib.record.startRewrite(client, message, checkCount=100)
       #Set Channel Privacy Command
 			elif (args[1] == cmd.set_privacy):
 				await lib.privacy.setPrivacy(client, message)
@@ -145,6 +150,7 @@ async def on_message(message):
 			if canPost is True:
 				await lib.reaction.reactWrench(client, message)
 				await lib.record.postToDatabase(client, message)
+				await lib.reaction.waitThenClearAll(client, message, 10)
 
 #Keep the Bot Alive
 lib.keep_alive.keep_alive()

@@ -1,5 +1,6 @@
 import lib.db
 import lib.reaction
+import os
 
 
 async def getChronicle(client, message):
@@ -17,8 +18,10 @@ async def getChronicle(client, message):
     if rowCount == 1:
         if retval[0] == False:
             await client.send_message(message.channel, (
-                "Link to Your Chronicle: http://chronicler.seanmfrancis.net/chronicle.php?id={id}&page=1"
-                .format(id=message.channel.id)))
+                "Link to Your Chronicle: {url}/chronicle.php?id={id}&page=1"
+                .format(
+									url=os.environ.get("CHRONICLER_WEBSITE_URL"),
+									id=message.channel.id)))
             await lib.reaction.reactThumbsUp(client, message)
         elif retval[0] == True:
             await client.send_message(

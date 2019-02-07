@@ -2,31 +2,38 @@ import lib.db
 
 
 def validateUser(client, message):
-    print("Message Author ID: " + message.author.id)
-
-    ignoredID = [client.user]
-
-    rowCount, usersFound, exists = lib.db.queryDatabase(
-        "SELECT name,id FROM {id}_ignoredID".format(id=message.channel.id),
+		print("Message Author ID: " + message.author.id)
+		
+		ignoredID = [client.user.id]
+		
+		rowCount, usersFound, exists = lib.db.queryDatabase(
+				"SELECT id FROM {id}_ignoredUsers".format(id=message.channel.id),
         client,
         message.channel,
         checkExists=True,
-        tablename="{id}_ignoredID".format(id=message.channel.id),
+        tablename="{id}_ignoredUsers".format(id=message.channel.id),
         getResult=True,
         closeConn=True)
-
-    if exists == True and usersFound != None:
-        for found in usersFound:
-            print("Ignored User ID: " + found[1])
-            ignoredID.append(found[1])
-
-        for user in ignoredID:
-            print("Checking User")
-            if message.author.id == user:
-                print("This Message was written by an ignored user")
-                return False
-
-    return True
+				
+		print(usersFound)
+				
+		if exists == True and usersFound != None:
+				for found in usersFound:
+						print("Ignored User ID: " + found)
+						ignoredID.append(found)
+						
+				for user in ignoredID:
+						print("Checking User")
+						if message.author.id == user.id:
+								print("This Message was written by an ignored user")
+								return False
+		elif exists == True and usersFound == None:
+				if message.author == client.user:
+							return False
+				else:
+							return True
+								
+		return True
 
 
 def checkIfCanPost(client, message):

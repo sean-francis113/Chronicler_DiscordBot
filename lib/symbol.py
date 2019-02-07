@@ -94,6 +94,34 @@ async def removeSymbol(client, message):
                 "The Chronicler could not find the symbol in its database for this channel. Did you type it correctly? If you are, make sure it is a symbol that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue."
             )
 
+def findMarkdown(string):
+		#Current Markdown (as of 2/7/2019)
+		# * = Italics
+		# ** = Bold
+		# *** = Bold Italics
+		# _ = Underline
+		# _* = Underline Italics
+		# _** = Underline Bold
+		# _*** = Underline Bold Italics
+		# ~~ = Strikethrough
+		# ` = One Line Code
+		# ``` = Multiline Code
+		markdownSymbols = ["*", "**","***", "_", "_*", "_**", "_***", "~~"]
+		codeSymbols = ["`", "```"]
+		codeStart = -1
+		codeEnd = -1
+
+		for symbol in codeSymbols:
+				codeStart = string.find(symbol)
+				if codeStart > -1:
+					codeEnd = string.find(string[codeStart:])
+					if codeEnd > -1:
+						string.replace(string[codeStart:codeStart + (len(symbol) - 1)], "<code>")
+						string.replace(string[codeEnd:codeEnd + (len(symbol - 1))], "</code>")
+
+						
+
+
 
 def pluckSymbols(string, start, end, removeInside=True):
     strToEdit = string

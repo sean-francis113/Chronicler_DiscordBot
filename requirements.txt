@@ -3,3 +3,4 @@ flask
 python-dotenv
 pymysql
 asyncio==3.4.3
+requests==2.21.0

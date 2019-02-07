@@ -3,6 +3,7 @@ import lib.symbol
 import lib.db
 import lib.reaction
 import lib.log
+import asyncio
 
 
 #Posts the message into the database
@@ -46,85 +47,108 @@ async def postToDatabase(client, message):
 
 #Rewrite the Whole Chronicle Frm the Beginning
 async def startRewrite(client,
-                       message,
-                       connection=None,
-                       finalString="",
-                       lastMessageFound=None):
-    messagesChecked = 0
+												message,
+                      	connection=None,
+                       	messageArray=[],
+                       	lastMessageFound=None,
+												checkCount=500):
+												
+		conn = None
 
-    if connection == None:
-        conn = lib.db.connectToDatabase()
+		if connection == None:
+				conn = lib.db.connectToDatabase()
+		else:
+				conn = connection
 
-    rowCount, result, exists = lib.db.queryDatabase(
-        "DELETE FROM {id}_contents".format(id=message.channel.id),
-        client,
-        message.channel,
+		rowCount, retval, exists = lib.db.queryDatabase(
+				"SELECT * FROM {id}_contents".format(id=message.channel.id), 
+				client, 
+				message.channel,
         connection=conn,
         checkExists=True,
         tablename="{id}_contents".format(id=message.channel.id),
         commit=False,
         closeConn=False)
-
-    if exists == False:
-        await lib.reaction.reactThumbsDown(client, message)
-        await client.send_message(
-            message.channel,
+		
+		if exists == False:
+				print("Doesn't Exist")
+				lib.reaction.reactThumbsDown(client, message)
+				client.send_message(
+          	message.channel,
             "The Chronicler could not find this channel in it's database. Has this channel been Whitelisted?"
             .format(id=message.channel.id))
-        return
-    else:
-        async for curMessage in client.logs_from(
-                message.channel, after=lastMessageFound, limit=500):
+				return
 
-            validUser = lib.validation.validateUser(client, curMessage)
+		messagesChecked = 0
+		async for curMessage in client.logs_from(
+      	message.channel, before=lastMessageFound, limit=checkCount):
 
-            if validUser == True and curMessage.content.startswith(
-                    "!c") == False:
-                editted_content = curMessage.content
+				messagesChecked += 1
+				print(messagesChecked)
+				print(curMessage.content)
 
-                word_list = lib.keywords.getKeywords(client, message.channel)
-                symbol_list = lib.symbol.getSymbols(client, message.channel)
+				validUser = lib.validation.validateUser(client, curMessage)
+				editted_content = ""
+						
+				if validUser == True and curMessage.content.startswith(
+          	"!c") == False:
+						editted_content = curMessage.content
+								
+						word_list = lib.keywords.getKeywords(client, message.channel)
+						symbol_list = lib.symbol.getSymbols(client, message.channel)
+								
+						for word in word_list:
+								editted_content = lib.keywords.replaceKeyword(
+              	editted_content, word[0], word[1])
+												
+						for symbol in symbol_list:
+								editted_content = lib.symbol.pluckSymbols(
+              	editted_content, symbol[0], symbol[1])
+												
+						messageArray.append((curMessage, editted_content, curMessage.author))
+						if messagesChecked == checkCount:
+								lastMessageFound = curMessage
+								if client.logs_from(
+                   	message.channel, before=lastMessageFound, limit=checkCount):
+									print("Continuing Rewrite\n\n\n\n")
+									await startRewrite(client, message, conn, messageArray, lastMessageFound, checkCount)
+					
+						elif client.logs_from(
+                   	message.channel, before=lastMessageFound, limit=checkCount) == None:
+								return messageArray
 
-                for word in word_list:
-                    editted_content = lib.keywords.replaceKeyword(
-                        editted_content, word[0], word[1])
+		rowCount, result, exists = lib.db.queryDatabase(
+     		"DELETE FROM {id}_contents".format(id=message.channel.id),
+     		client,
+     		message.channel,
+     		connection=conn,
+     		checkExists=True,
+     		tablename="{id}_contents".format(id=message.channel.id),
+     		commit=False,
+     		closeConn=False)
 
-                for symbol in symbol_list:
-                    editted_content = lib.symbol.pluckSymbols(
-                        editted_content, symbol[0], symbol[1])
+		print("Messages Deleted")
 
-                lib.db.queryDatabase(
-                    "INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\"{type}\", {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")"
-                    .format(
-                        id=message.channel.id,
-                        type="In-Character",
-                        char_count=len(editted_content),
-                        word_count=len(editted_content.split(" ")),
-                        entry_owner=message.author.name,
-                        entry_editted=editted_content,
-                        entry_original=message.content),
-                    client,
-                    message.channel,
-                    connection=conn,
-                    checkExists=False,
-                    commit=False,
-                    closeConn=False)
-
-            messagesChecked += 1
-
-            if messagesChecked == 500:
-                lastMessageFound = curMessage
-                if client.logs_from(
-                        message.channel, after=curMessage, limit=500):
-                    await startRewrite(client, message, conn, finalString,
-                                       lastMessageFound)
-
-        rowCount, retval, exists = lib.db.queryDatabase(
-            "SELECT * FROM {id}_contents")
-
-        if (rowCount > 0):
-            conn.commit()
-            await lib.reaction.reactThumbsUp(client, message)
-        else:
-            await lib.reaction.reactThumbsDown(client, message)
-        conn.close()
+		i = len(messageArray) - 1
+		while i >= 0:
+				lib.db.queryDatabase(
+         		"INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\"{type}\", {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")".format(
+             		id=message.channel.id,
+                type="In-Character",
+                char_count=len(messageArray[i][1]),
+                word_count=len(messageArray[i][1].split(" ")),
+                entry_owner=messageArray[i][2].name,
+                entry_editted=messageArray[i][1],
+                entry_original=messageArray[i][0].content),
+            client,
+            messageArray[i][0].channel,
+            connection=conn,
+            checkExists=False,
+            commit=False,
+            closeConn=False)
+				print("Inserted: " + str(messageArray[i][1]))
+				i -= 1
+								
+		conn.commit()
+		conn.close()
+		lib.db.updateModifiedTime(client, message.channel)
