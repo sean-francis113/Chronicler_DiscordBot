@@ -27,6 +27,6 @@ async def deleteProgressMessage(client, pMessage):
 				return
 		await client.delete_message(pMessage)
 
-async def waitThenDeleteProgressMessage(client, pMessage, timeToSleep):
+async def waitThenDelete(client, pMessage, timeToSleep):
 		await asyncio.sleep(timeToSleep)
 		await deleteProgressMessage(client, pMessage)

@@ -51,7 +51,6 @@ def editChronicle(client, oldMessage, newMessage):
         closeConn=False)
 
     for row in retval:
-        print(row[5])
         #0 = entry_id
         #5 = entry_original
         if row[5] == oldMessage.content:

@@ -69,7 +69,7 @@ async def on_message(message):
 				await lib.progress.updateProgressMessage(client, progressMessage, "Found Show Welcome Command. Posting Welcome Message.")
 				await lib.w.showWelcome(client, message)
 				await lib.progress.updateProgressMessage(client, progressMessage, "Welcome Posted. This Message Will Be Deleted Soon.")
-				await lib.progress.waitThenDeleteProgressMessage(client, progressMessage, 10)
+				await lib.progress.waitThenDelete(client, progressMessage, 2)
       #Show Help Command
 			elif (args[1] == cmd.show_help):
 				await lib.h.showHelp(client, message)
@@ -145,12 +145,19 @@ async def on_message(message):
 				await postInvalidComment(message)
 		#No Command Found
 		else:
+			progressMessage = await lib.progress.createProgressMessage(client, message.channel, "Did Not Find a Command. Checking Validation for Posting.")
 			#Make Sure The Chronicle Can Record
 			canPost = lib.validation.checkIfCanPost(client, message)
 			if canPost is True:
+				await lib.progress.updateProgressMessage(client, progressMessage, "Validation Successful. Posting to Database.")
 				await lib.reaction.reactWrench(client, message)
 				await lib.record.postToDatabase(client, message)
-				await lib.reaction.waitThenClearAll(client, message, 10)
+				await lib.progress.waitThenDelete(client, progressMessage, 5)
+				await lib.reaction.waitThenClearAll(client, message, 5)
+			else:
+				await lib.progress.updateProgressMessage(client, progressMessage, "Validation Failed. This Message Will Be Deleted Soon.")
+				await lib.progress.waitThenDelete(client, progressMessage, 5)
+				await lib.reaction.waitThenClearAll(client, message, 5)
 
 #Keep the Bot Alive
 lib.keep_alive.keep_alive()

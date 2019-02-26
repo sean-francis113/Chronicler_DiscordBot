@@ -94,8 +94,8 @@ async def removeSymbol(client, message):
                 "The Chronicler could not find the symbol in its database for this channel. Did you type it correctly? If you are, make sure it is a symbol that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue."
             )
 
-def findMarkdown(string):
-		#Current Markdown (as of 2/7/2019)
+def replaceMarkdown(string):
+		#Current Markdown Known (as of 2/7/2019)
 		# * = Italics
 		# ** = Bold
 		# *** = Bold Italics
@@ -106,21 +106,55 @@ def findMarkdown(string):
 		# ~~ = Strikethrough
 		# ` = One Line Code
 		# ``` = Multiline Code
-		markdownSymbols = ["*", "**","***", "_", "_*", "_**", "_***", "~~"]
-		codeSymbols = ["`", "```"]
-		codeStart = -1
-		codeEnd = -1
+		# || = Spoiler
+
+		#Ordered by Symbol Priority
+		codeSymbols = [('```', "<span class=\"multilinecode\">", "</span>"), ('`', "<span class=\"singlelinecode\">", "</span>")]
+		markdownSymbols = [('_***', "<span class=\"italics_bold_underline\">", "</span>"), ('***', "<span class=\"italics_bold\">", "</span>"), ('_**', "<span class=\"bold_underline\">", "</span>"), ('**', "<span class=\"bold\">", "</span>"), ('_*', "<span class=\"italics_underline\">", "</span>"), ('~~', "<span class=\"strikeout\">", "</span>"), ('||', "<span class=\"spoiler\">", "</span>"), ('*', "<span class=\"italics\">", "</span>"), ('_', "<span class=\"underline\">", "</span>")]
+		
+		codeString = string
+		markdownString = ""
+		
+		codeStart = []
+		codeEnd = []
+
+		print("String To Check Markdown: " + codeString)
 
 		for symbol in codeSymbols:
-				codeStart = string.find(symbol)
-				if codeStart > -1:
-					codeEnd = string.find(string[codeStart:])
-					if codeEnd > -1:
-						string.replace(string[codeStart:codeStart + (len(symbol) - 1)], "<code>")
-						string.replace(string[codeEnd:codeEnd + (len(symbol - 1))], "</code>")
+				#Run Functions for Multiline Code Blocks
+				while codeString.find(symbol[0]) > -1:
+						print("Found Code Symbol")
+						firstSymbol = codeString.find(symbol[0])
+						nextSymbol = codeString.find(symbol[0], firstSymbol + len(symbol[0]))
+						if nextSymbol > -1:
+								codeStart.append(firstSymbol)
+								codeEnd.append(nextSymbol)
+								insideString = codeString[firstSymbol + len(symbol[0]) : nextSymbol]
+								codeString = codeString[:firstSymbol] + symbol[1] + insideString + symbol[2] + codeString[firstSymbol + len(symbol[0]) : nextSymbol + len(symbol[0])]						
 
-						
+		print("String After Code Markdown: " + codeString)
 
+		markdownString = codeString
+
+		for symbol in markdownSymbols:
+				while markdownString.find(symbol[0]) != -1:
+						print("Found \'" + symbol[0] + "\' in string: " + markdownString)
+						symbolStart = markdownString.find(symbol[0])
+						symbolEnd = markdownString.find(symbol[0], symbolStart + len(symbol[0]))
+						#If We Found Symbol AND It is Not Within a Code Block
+						i = 0
+						while i < len(codeStart) and i < len(codeEnd):
+								#If Either Symbol is Within the specified Code Block
+								if (symbolStart > codeStart[i] and symbolStart < codeEnd[i]) or (symbolEnd > codeStart[i] and symbolEnd < codeEnd[i]):
+										i += 1
+								else:
+										insideString = markdownString[symbolStart + len(symbol[0]) : symbolEnd]
+										markdownString = markdownString[:symbolStart] + symbol[1] + insideString + symbol[2] + markdownString[symbolStart + len(symbol[0]) : symbolEnd + len(symbol[0])]
+										break
+
+		print("String After Other Markdown: " + markdownString)
+
+		return markdownString
 
 
 def pluckSymbols(string, start, end, removeInside=True):

@@ -17,14 +17,11 @@ async def addUserToIgnoreList(client, message):
     usersInServer = client.get_all_members()
     for user in usersFound:
         strippedUser = user.strip()
-        print("Finding User: " + user)
         for serverUser in usersInServer:
             if serverUser.nick == strippedUser:
-                print("Found User Nickname")
                 combination = [serverUser.nick, serverUser.id]
                 ignoredUsers.append(dict(zip(dict_user_keys, combination)))
             elif serverUser.name == strippedUser:
-                print("Found User Name")
                 combination = [serverUser.name, serverUser.id]
                 ignoredUsers.append(dict(zip(dict_user_keys, combination)))
 
@@ -87,11 +84,8 @@ async def removeIgnoredUsers(client, message):
     serverUsers = client.get_all_members()
 
     for user in usersFound:
-        print("User to Check: " + user.strip())
         for sUser in serverUsers:
-            print("Checking Server User: " + sUser.name)
             if user.strip() == sUser.nick or user.strip() == sUser.name:
-                print("Found User In List")
                 lib.db.queryDatabase(
                     "DELETE FROM {channel_id}_ignoredUsers WHERE id=\"{userID}\""
                     .format(channel_id=message.channel.id, userID=sUser.id),

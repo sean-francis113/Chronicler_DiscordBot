@@ -109,8 +109,6 @@ def getKeywords(client, channel):
         getResult=True,
         closeConn=True)
 
-    print("Retrieved Keywords")
-
     if rowCount == 0:
         return wordList
     else:

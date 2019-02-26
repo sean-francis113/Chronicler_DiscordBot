@@ -2,7 +2,6 @@ import lib.db
 
 
 def validateUser(client, message):
-		print("Message Author ID: " + message.author.id)
 		
 		ignoredID = [client.user.id]
 		
@@ -15,17 +14,12 @@ def validateUser(client, message):
         getResult=True,
         closeConn=True)
 				
-		print(usersFound)
-				
 		if exists == True and usersFound != None:
 				for found in usersFound:
-						print("Ignored User ID: " + found)
 						ignoredID.append(found)
 						
 				for user in ignoredID:
-						print("Checking User")
 						if message.author.id == user.id:
-								print("This Message was written by an ignored user")
 								return False
 		elif exists == True and usersFound == None:
 				if message.author == client.user:
