@@ -259,8 +259,8 @@ async def createChroniclerChannel(client, message, createNew=True):
 
     #Send Welcome and Help Messages into New Channel
     if (showWelcomeMessage == True or showHelpMessage == True):
-        openingMessage = await client.send_message(
-            chroniclerChannel, 'Welcome to your new channel!')
+        openingMessage = await lib.message.send(
+            chroniclerChannel, "Welcome to your new channel!", delete=False)
         if (showWelcomeMessage == True):
             await lib.w.showWelcome(openingMessage, client)
         if (showHelpMessage == True):

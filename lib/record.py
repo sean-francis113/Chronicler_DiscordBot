@@ -11,22 +11,41 @@ import asyncio
 #client: The bot's client
 async def postToDatabase(client, message):
 		editted_content = message.content
+		print("String At Record Start: " + editted_content)
 		
 		editted_content = lib.symbol.replaceMarkdown(editted_content)
+		print("String After Markdown: " + editted_content)
 		
 		word_list = lib.keywords.getKeywords(client, message.channel)
 		symbol_list = lib.symbol.getSymbols(client, message.channel)
 		
 		for word in word_list:
-				editted_content = lib.keywords.replaceKeyword(editted_content, word[0],
-                                                      word[1])
-																											
+				editted_content = lib.keywords.replaceKeyword(editted_content, word[0], word[1])
+
+		print("String After Keywords: " + editted_content)																									
 		for symbol in symbol_list:
-				editted_content = lib.symbol.pluckSymbols(editted_content, symbol[0],
-																									symbol[1])
-																									
+				editted_content = lib.symbol.pluckSymbols(editted_content, symbol[0], symbol[1])
+
+		print("String After Symbols: " + editted_content)
+
+		charCount = 0
+
+		#NEED TO GET ACCURATE CHARACTER/WORD COUNT BY LOOKING AT EVERYTHING NOT WITHIN SPAN TAGS!!!!
+		while editted_content.find("<span class=") != -1:
+				break
+		
+		print("Query String: INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")"
+        .format(
+            id=message.channel.id,
+            type="In-Character",
+            char_count=len(editted_content),
+            word_count=len(editted_content.split(" ")),
+            entry_owner=message.author.name,
+            entry_editted=editted_content,
+            entry_original=message.content))
+
 		lib.db.queryDatabase(
-        "INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")"
+        "INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')"
         .format(
             id=message.channel.id,
             type="In-Character",
@@ -74,7 +93,7 @@ async def startRewrite(client,
 		
 		if exists == False:
 				lib.reaction.reactThumbsDown(client, message)
-				client.send_message(
+				lib.message.semd(
           	message.channel,
             "The Chronicler could not find this channel in it's database. Has this channel been Whitelisted?"
             .format(id=message.channel.id))
@@ -130,7 +149,7 @@ async def startRewrite(client,
 		i = len(messageArray) - 1
 		while i >= 0:
 				lib.db.queryDatabase(
-         		"INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\"{type}\", {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")".format(
+         		"INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')".format(
              		id=message.channel.id,
                 type="In-Character",
                 char_count=len(messageArray[i][1]),

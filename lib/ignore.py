@@ -1,6 +1,7 @@
 import lib.db
 import lib.reaction
 import commandList as cmd
+import lib.message
 
 
 async def sendIgnoreReaction(client, message):
@@ -75,7 +76,7 @@ async def removeIgnoredUsers(client, message):
     if exists == False:
         return
     elif rowCount == 0:
-        await client.send_message(
+        await lib.message.send(
             message.channel,
             "The Chronicler could not find any users in your Ignored User List."
         )

@@ -1,3 +1,5 @@
+import lib.message
+
 async def showWelcome(client, message):
     welcomeString = []
 
@@ -16,4 +18,4 @@ async def showWelcome(client, message):
     )
 
     for string in welcomeString:
-        await client.send_message(message.channel, string)
+        await lib.message.send(message.channel, string, delete=False)

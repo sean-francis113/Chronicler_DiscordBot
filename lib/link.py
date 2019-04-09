@@ -17,20 +17,19 @@ async def getChronicle(client, message):
 
     if rowCount == 1:
         if retval[0] == False:
-            await client.send_message(message.channel, (
-                "Link to Your Chronicle: {url}/chronicle.php?id={id}&page=1"
+            await lib.message.send(message.channel, "Link to Your Chronicle: {url}/chronicle.php?id={id}&page=1"
                 .format(
 									url=os.environ.get("CHRONICLER_WEBSITE_URL"),
-									id=message.channel.id)))
+									id=message.channel.id), delete=False)
             await lib.reaction.reactThumbsUp(client, message)
         elif retval[0] == True:
-            await client.send_message(
+            await lib.message.send(
                 message.channel,
                 "This Chronicle has been blacklisted. You cannot get its link ever again."
             )
             await lib.reaction.reactThumbsDown(client, message)
     elif rowCount == 0:
-        await client.send_message(
+        await lib.message.send(
             message.channel,
             "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?"
         )

@@ -87,9 +87,9 @@ async def removeKeyword(client, message):
             await lib.reaction.reactThumbsUp(client, message)
         elif rowCount == 0:
             await lib.reaction.reactThumbsDown(client, message)
-            await client.send_message(
+            await lib.message.send(
                 message.channel,
-                "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly? If you are, make sure it is a keyword that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue."
+                "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly? If you are, make sure it is a keyword that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue.", delete=False
             )
 
     conn.close()

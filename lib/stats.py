@@ -16,20 +16,20 @@ async def displayChannelStats(client, message):
 
     if exists == False:
         await lib.reaction.reactThumbsDown(client, message)
-        await client.send_message(
+        await lib.message.send(
             message.channel,
             "The Chronicler could not find the table. Please immediately either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue adding the following: ERROR 500: displayChannelStatus() QUERY: SELECT * FROM chronicles_info WHERE channel_id = {id}"
-            .format(id=message.channel.id))
+            .format(id=message.channel.id), delete=False)
         return
     else:
         if rowCount == 0:
-            await client.send_message(
+            await lib.message.send(
                 message.channel,
                 "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?"
             )
         else:
             if retval[2] == True:
-                await client.send_message(
+                await lib.message.send(
                     message.channel,
                     "This channel has been blacklisted. You can no longer get its stats."
                 )
@@ -62,7 +62,7 @@ async def displayChannelStats(client, message):
                               '\tCharacter Count = ' + str(char_num) + '\n'
                               '\tWord Count = ' + str(word_num))
 
-                await client.send_message(message.channel, messageStr)
+                await lib.message.send(message.channel, messageStr,delete=False)
                 await lib.reaction.reactThumbsUp(client, message)
 
 
@@ -84,7 +84,7 @@ async def displayKeywords(client, message):
             i += 1
 
     for index in message_list:
-        await client.send_message(message.channel, message_list[index])
+        await lib.message.send(message.channel, message_list[index], delete=False)
 
     await lib.reaction.reactThumbsUp(client, message)
 
@@ -108,7 +108,7 @@ async def displaySymbols(client, message):
             i += 1
 
     for index in message_list:
-        await client.send_message(message.channel, message_list[index])
+        await lib.message.send(message.channel, message_list[index], delete=False)
 
     await lib.reaction.reactThumbsUp(client, message)
 

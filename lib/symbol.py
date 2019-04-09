@@ -89,13 +89,12 @@ async def removeSymbol(client, message):
             await lib.reaction.reactThumbsUp(client, message)
         elif rowCount == 0:
             await lib.reaction.reactThumbsDown(client, message)
-            await client.send_message(
-                message.channel,
-                "The Chronicler could not find the symbol in its database for this channel. Did you type it correctly? If you are, make sure it is a symbol that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue."
+            await lib.message.send(message.channel,
+                "The Chronicler could not find the symbol in its database for this channel."
             )
 
 def replaceMarkdown(string):
-		#Current Markdown Known (as of 2/7/2019)
+		# Current Markdown Known (as of 4/4/2019)
 		# * = Italics
 		# ** = Bold
 		# *** = Bold Italics
@@ -109,50 +108,90 @@ def replaceMarkdown(string):
 		# || = Spoiler
 
 		#Ordered by Symbol Priority
-		codeSymbols = [('```', "<span class=\"multilinecode\">", "</span>"), ('`', "<span class=\"singlelinecode\">", "</span>")]
-		markdownSymbols = [('_***', "<span class=\"italics_bold_underline\">", "</span>"), ('***', "<span class=\"italics_bold\">", "</span>"), ('_**', "<span class=\"bold_underline\">", "</span>"), ('**', "<span class=\"bold\">", "</span>"), ('_*', "<span class=\"italics_underline\">", "</span>"), ('~~', "<span class=\"strikeout\">", "</span>"), ('||', "<span class=\"spoiler\">", "</span>"), ('*', "<span class=\"italics\">", "</span>"), ('_', "<span class=\"underline\">", "</span>")]
+		spoilerSymbols = [("||", "<span class=\"spoiler\">", "</span>")]
+		codeSymbols = [("```", "<span class=\"multilinecode\">", "</span>"), ("`", "<span class=\"singlelinecode\">", "</span>")]
+		markdownSymbols = [("_***", "<span class=\"italics_bold_underline\">", "</span>"), ("***", "<span class=\"italics_bold\">", "</span>"), ("_**", "<span class=\"bold_underline\">", "</span>"), ("**", "<span class=\"bold\">", "</span>"), ("_*", "<span class=\"italics_underline\">", "</span>"), ("~~", "<span class=\"strikeout\">", "</span>"), ("*", "<span class=\"italics\">", "</span>"), ("_", "<span class=\"underline\">", "</span>")]
 		
-		codeString = string
+		spoilerString = string
+		codeString = ""
 		markdownString = ""
 		
+		spoilerStart = []
+		spoilerEnd = []
 		codeStart = []
 		codeEnd = []
 
-		print("String To Check Markdown: " + codeString)
+		# First Check for Spoilers
+		for symbol in spoilerSymbols:
+				lastPosChecked = 0
+				while spoilerString.find(symbol[0], lastPosChecked) != -1:
+						firstIndex = spoilerString.find(symbol[0])
+						nextIndex = spoilerString.find(symbol[0], firstIndex + len(symbol[0]))
+						if nextIndex != -1:
+								lastPosChecked = nextIndex + len(symbol[0])
+								spoilerStart.append(firstIndex)
+								spoilerEnd.append(nextIndex)
+								insideString = spoilerString[firstIndex + len(symbol[0]) : nextIndex]
+								spoilerString = spoilerString[ : firstIndex] + symbol[1] + insideString + symbol[2] + spoilerString[nextIndex + len(symbol[0]) : ]
 
+		codeString = spoilerString
+
+		#Then Check Codeblocks
 		for symbol in codeSymbols:
+				lastPosChecked = 0
 				#Run Functions for Multiline Code Blocks
-				while codeString.find(symbol[0]) > -1:
-						print("Found Code Symbol")
-						firstSymbol = codeString.find(symbol[0])
-						nextSymbol = codeString.find(symbol[0], firstSymbol + len(symbol[0]))
-						if nextSymbol > -1:
-								codeStart.append(firstSymbol)
-								codeEnd.append(nextSymbol)
-								insideString = codeString[firstSymbol + len(symbol[0]) : nextSymbol]
-								codeString = codeString[:firstSymbol] + symbol[1] + insideString + symbol[2] + codeString[firstSymbol + len(symbol[0]) : nextSymbol + len(symbol[0])]						
+				while codeString.find(symbol[0], lastPosChecked) != -1:
+						firstIndex = codeString.find(symbol[0])
+						nextIndex = codeString.find(symbol[0], firstIndex + len(symbol[0]))
+						if nextIndex != -1:
+								lastPosChecked = nextIndex + len(symbol[0])
+								if len(spoilerStart) == 0 or len(spoilerEnd) == 0:
+										insideString = codeString[firstIndex + len(symbol[0]) : nextIndex]
+										codeString = codeString[:firstIndex] + symbol[1] + insideString + symbol[2] + codeString[nextIndex + len(symbol[0]):]
+								else:
+										i = 0
+										validSpot = False
+										while i < len(spoilerStart) and i < len(spoilerEnd):
+												# Ensure That All of the Symbols Are Either Within Or Without the Spoiler Tags
+												if ((firstIndex > spoilerStart[i] and firstIndex < spoilerEnd[i]) and (nextIndex > spoilerStart[i] and nextIndex < spoilerEnd[i])) or (firstIndex < spoilerStart[i] and nextIndex < spoilerStart[i]) or (firstIndex > spoilerEnd[i] and nextIndex > spoilerEnd[i]):
+														i += 1
+														validSpot = True
+												else:		
+														i += 1
 
-		print("String After Code Markdown: " + codeString)
+										if validSpot == True:
+												insideString = codeString[firstIndex + len(symbol[0]) : nextIndex]
+												codeString = codeString[:firstIndex] + symbol[1] + insideString + symbol[2] + codeString[nextIndex + len(symbol[0]):]
 
 		markdownString = codeString
 
+		#Finally Check Remaining Markdown
 		for symbol in markdownSymbols:
-				while markdownString.find(symbol[0]) != -1:
-						print("Found \'" + symbol[0] + "\' in string: " + markdownString)
-						symbolStart = markdownString.find(symbol[0])
-						symbolEnd = markdownString.find(symbol[0], symbolStart + len(symbol[0]))
-						#If We Found Symbol AND It is Not Within a Code Block
+				lastPosChecked = 0
+				while markdownString.find(symbol[0], lastPosChecked) != -1:
+						firstIndex = markdownString.find(symbol[0])
+						nextIndex = markdownString.find(symbol[0], firstIndex + len(symbol[0]))
 						i = 0
-						while i < len(codeStart) and i < len(codeEnd):
-								#If Either Symbol is Within the specified Code Block
-								if (symbolStart > codeStart[i] and symbolStart < codeEnd[i]) or (symbolEnd > codeStart[i] and symbolEnd < codeEnd[i]):
-										i += 1
-								else:
-										insideString = markdownString[symbolStart + len(symbol[0]) : symbolEnd]
-										markdownString = markdownString[:symbolStart] + symbol[1] + insideString + symbol[2] + markdownString[symbolStart + len(symbol[0]) : symbolEnd + len(symbol[0])]
-										break
+						if nextIndex != -1:
+							lastPosChecked = nextIndex + len(symbol[0])
+							if len(codeStart) == 0 or len(codeEnd) == 0:
+									insideString = markdownString[firstIndex + len(symbol[0]) : nextIndex]
+									markdownString = markdownString[:firstIndex] + symbol[1] + insideString + symbol[2] + markdownString[nextIndex + len(symbol[0]):]
+							else:
+								while i < len(codeStart) and i < len(codeEnd):
+										#If Either symbol is Within the specified Code Block
+										if (firstIndex > codeStart[i] and firstIndex < codeEnd[i]) and (nextIndex > codeStart[i] and nextIndex < codeEnd[i]):
+												i += 1
 
-		print("String After Other Markdown: " + markdownString)
+										else:		
+												if i == len(codeStart) or i == len(codeEnd):
+														
+														insideString = markdownString[firstIndex + len(symbol[0]) : nextIndex]
+														markdownString = markdownString[:firstIndex] + symbol[1] + insideString + symbol[2] + markdownString[nextIndex + len(symbol[0]):]
+														
+														break
+												else:
+														i += 1
 
 		return markdownString
 

@@ -1,6 +1,6 @@
 from flask import Flask
 from threading import Thread
-#from os import system
+import sys
 
 app = Flask('')
 
@@ -10,8 +10,8 @@ def home():
 
 def run():
 	app.run(host='0.0.0.0',port=8080)
-	#Saved In Case 'Address Already In Use' Error Reappears
-	#system("pkill -9 python")
+	#Saved In Case A Force Quit is Needed
+	#sys.exit()
 
 def keep_alive():  
     t = Thread(target=run)

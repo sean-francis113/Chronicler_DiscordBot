@@ -10,7 +10,7 @@ import lib.ignore
 import lib.keywords
 import lib.link
 import lib.privacy
-import lib.progress
+import lib.message
 import lib.record
 import lib.stats
 import lib.story
@@ -26,7 +26,7 @@ client = discord.Client()
 #Post a Message Telling the User They Entered an Invalid Command
 #message: The Message the User Sent.
 async def postInvalidComment(message):
-  await client.send_message(message.channel, "Did not find a valid command. Type '!c help' for a list of valid commands.")
+  await lib.message.send(message.channel, "Did not find a valid command. Type '!c help' for a list of valid commands.")
 
 
 #Discord Event Called When a Message Has Been Editted
@@ -53,23 +53,22 @@ async def on_channel_delete(channel):
 #message: The Message Sent.
 @client.event
 async def on_message(message):
-  #Confirm That the Message Was Sent By Someone Other Than Itself, or
-  #Someone Not On the Channel's Ignored User List
+	await lib.reaction.reactWrench(client, message)
+	#Confirm That the Message Was Sent By Someone Other Than Itself, or
+	#Someone Not On the Channel's Ignored User List
 	validUser = lib.validation.validateUser(client, message)
 	#If the Message Author is Valid
 	if validUser is True:
 		#If a Command Was Typed In
 		if (message.content.startswith(cmd.prefix)):
-			await lib.reaction.reactWrench(client, message)
-			progressMessage = await lib.progress.createProgressMessage(client, message.channel, "Found Command. Reading Command.")
+			progressMessage = await lib.message.createProgressMessage(client, message.channel, "Found Command. Reading Command.")
 			#Get the Arguments by Splitting on Spaces
 			args = message.content.split(' ')
 			#Show Welcome Command
 			if (args[1] == cmd.show_welcome):
-				await lib.progress.updateProgressMessage(client, progressMessage, "Found Show Welcome Command. Posting Welcome Message.")
+				await lib.message.edit(client, progressMessage, "Found Show Welcome Command. Posting Welcome Message.")
 				await lib.w.showWelcome(client, message)
-				await lib.progress.updateProgressMessage(client, progressMessage, "Welcome Posted. This Message Will Be Deleted Soon.")
-				await lib.progress.waitThenDelete(client, progressMessage, 2)
+				await lib.message.edit(client, progressMessage, "Welcome Posted. This Message Will Be Deleted Soon.")
       #Show Help Command
 			elif (args[1] == cmd.show_help):
 				await lib.h.showHelp(client, message)
@@ -145,19 +144,16 @@ async def on_message(message):
 				await postInvalidComment(message)
 		#No Command Found
 		else:
-			progressMessage = await lib.progress.createProgressMessage(client, message.channel, "Did Not Find a Command. Checking Validation for Posting.")
+			progressMessage = await lib.message.send(message.channel, "Did Not Find a Command. Checking Validation for Posting.")
 			#Make Sure The Chronicle Can Record
 			canPost = lib.validation.checkIfCanPost(client, message)
 			if canPost is True:
-				await lib.progress.updateProgressMessage(client, progressMessage, "Validation Successful. Posting to Database.")
-				await lib.reaction.reactWrench(client, message)
+				await lib.message.edit(client, progressMessage, "Validation Successful. Posting to Database.")
 				await lib.record.postToDatabase(client, message)
-				await lib.progress.waitThenDelete(client, progressMessage, 5)
-				await lib.reaction.waitThenClearAll(client, message, 5)
 			else:
-				await lib.progress.updateProgressMessage(client, progressMessage, "Validation Failed. This Message Will Be Deleted Soon.")
-				await lib.progress.waitThenDelete(client, progressMessage, 5)
-				await lib.reaction.waitThenClearAll(client, message, 5)
+				await lib.message.edit(client, progressMessage, "Validation Failed. This Message Will Be Deleted Soon.")
+				
+		await lib.reaction.waitThenClearAll(client, message, 5)
 
 #Keep the Bot Alive
 lib.keep_alive.keep_alive()
