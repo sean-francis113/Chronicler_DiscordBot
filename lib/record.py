@@ -10,11 +10,6 @@ import asyncio
 #message: The message to post
 #client: The bot's client
 async def postToDatabase(client, message):
-		editted_content = message.content
-		print("String At Record Start: " + editted_content)
-		
-		editted_content = lib.symbol.replaceMarkdown(editted_content)
-		print("String After Markdown: " + editted_content)
 		
 		word_list = lib.keywords.getKeywords(client, message.channel)
 		symbol_list = lib.symbol.getSymbols(client, message.channel)
@@ -22,35 +17,27 @@ async def postToDatabase(client, message):
 		for word in word_list:
 				editted_content = lib.keywords.replaceKeyword(editted_content, word[0], word[1])
 
-		print("String After Keywords: " + editted_content)																									
 		for symbol in symbol_list:
 				editted_content = lib.symbol.pluckSymbols(editted_content, symbol[0], symbol[1])
 
-		print("String After Symbols: " + editted_content)
+		editted_content = lib.symbol.replaceMarkdown(editted_content)
+		taglessStr = editted_content
 
-		charCount = 0
-
-		#NEED TO GET ACCURATE CHARACTER/WORD COUNT BY LOOKING AT EVERYTHING NOT WITHIN SPAN TAGS!!!!
-		while editted_content.find("<span class=") != -1:
-				break
-		
-		print("Query String: INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \"{entry_owner}\", \"{entry_editted}\", \"{entry_original}\")"
-        .format(
-            id=message.channel.id,
-            type="In-Character",
-            char_count=len(editted_content),
-            word_count=len(editted_content.split(" ")),
-            entry_owner=message.author.name,
-            entry_editted=editted_content,
-            entry_original=message.content))
+		while taglessStr.find("<span class=") != -1:
+				startIndex = taglessStr.find("<span class=")
+				midIndex = taglessStr.find(">", startIndex)
+				endIndex = taglessStr.find("</span>", midIndex)
+				
+				if startIndex != -1 and midIndex != -1 and endIndex != -1:
+						taglessStr = taglessStr[ : startIndex] + taglessStr[midIndex : endIndex] + taglessStr[endIndex + len("</span>") : ]
 
 		lib.db.queryDatabase(
         "INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')"
         .format(
             id=message.channel.id,
             type="In-Character",
-            char_count=len(editted_content),
-            word_count=len(editted_content.split(" ")),
+            char_count=len(taglessStr),
+            word_count=len(taglessStr.split(" ")),
             entry_owner=message.author.name,
             entry_editted=editted_content,
             entry_original=message.content),
@@ -99,42 +86,49 @@ async def startRewrite(client,
             .format(id=message.channel.id))
 				return
 
-		messagesChecked = 0
-		async for curMessage in client.logs_from(
-      	message.channel, before=lastMessageFound, limit=checkCount):
+		if len(messageArray) == 0 or messageArray == None:
+				messageArray = await message.channel.history(after=lastMessageFound, limit=checkCount, oldest_first=True).flatten()
+				print(len(messageArray))
+		else:
+				newArray = await message.channel.history(after=lastMessageFound, limit=checkCount, oldest_first=True).flatten()
+				messageArray.extend(newArray)
+				print(len(messageArray))
 
-				messagesChecked += 1
+		lastMessage = messageArray[-1]
+		testArray = await message.channel.history(after=lastMessage, limit=checkCount, oldest_first=True).flatten()
 
-				validUser = lib.validation.validateUser(client, curMessage)
-				editted_content = ""
-						
-				if validUser == True and curMessage.content.startswith(
-          	"!c") == False:
-						editted_content = curMessage.content
+		if len(testArray) > 0:
+				print("Continuing Rewrite")
+				await startRewrite(client, message, connection=conn, messageArray=messageArray, lastMessageFound=lastMessage, checkCount=checkCount)
+				return
 
-						editted_content = lib.symbol.replaceMarkdown(editted_content)
-								
+		#Once We Have All Messages, Work to Grab Data and Edit Content as Needed
+		print(len(messageArray))
+		contentArray = []
+		messageNum = 1
+		for message in messageArray:
+				validUser = lib.validation.validateUser(client, message)
+				if validUser == True and message.content.startswith("!c") == False:
+						editted_content = message.content
+						print(messageNum)
+						editted_content = message.content
+						print(editted_content)
+
 						word_list = lib.keywords.getKeywords(client, message.channel)
 						symbol_list = lib.symbol.getSymbols(client, message.channel)
 								
 						for word in word_list:
-								editted_content = lib.keywords.replaceKeyword(
-              	editted_content, word[0], word[1])
+								editted_content = lib.keywords.replaceKeyword(editted_content, word[0], word[1])
 												
 						for symbol in symbol_list:
-								editted_content = lib.symbol.pluckSymbols(
-              	editted_content, symbol[0], symbol[1])
-												
-						messageArray.append((curMessage, editted_content, curMessage.author))
-						if messagesChecked == checkCount:
-								lastMessageFound = curMessage
-								if client.logs_from(
-                   	message.channel, before=lastMessageFound, limit=checkCount):
-									await startRewrite(client, message, conn, messageArray, lastMessageFound, checkCount)
-					
-						elif client.logs_from(
-                   	message.channel, before=lastMessageFound, limit=checkCount) == None:
-								return messageArray
+								editted_content = lib.symbol.pluckSymbols(editted_content, symbol[0], symbol[1])
+
+						editted_content = lib.symbol.replaceMarkdown(editted_content)
+
+						if editted_content != "":
+							contentArray.append((message, editted_content, message.author))
+
+						messageNum += 1 
 
 		rowCount, result, exists = lib.db.queryDatabase(
      		"DELETE FROM {id}_contents".format(id=message.channel.id),
@@ -146,24 +140,25 @@ async def startRewrite(client,
      		commit=False,
      		closeConn=False)
 
-		i = len(messageArray) - 1
-		while i >= 0:
+		i = 0
+		while i < len(contentArray):
+				print(i)
 				lib.db.queryDatabase(
          		"INSERT INTO {id}_contents (entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')".format(
              		id=message.channel.id,
                 type="In-Character",
-                char_count=len(messageArray[i][1]),
-                word_count=len(messageArray[i][1].split(" ")),
-                entry_owner=messageArray[i][2].name,
-                entry_editted=messageArray[i][1],
-                entry_original=messageArray[i][0].content),
+                char_count=len(contentArray[i][1]),
+                word_count=len(contentArray[i][1].split(" ")),
+                entry_owner=contentArray[i][2].name,
+                entry_editted=contentArray[i][1],
+                entry_original=contentArray[i][0].content),
             client,
-            messageArray[i][0].channel,
+            contentArray[i][0].channel,
             connection=conn,
             checkExists=False,
             commit=False,
             closeConn=False)
-				i -= 1
+				i += 1
 								
 		conn.commit()
 		conn.close()

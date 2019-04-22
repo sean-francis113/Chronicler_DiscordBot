@@ -16,7 +16,7 @@ open_story = "open_story"
 close_story = "close_story"
 
 #Privacy Commands
-set_privacy = "set_private"
+set_privacy = "set_privacy"
 
 #Ignore Commands
 ignore_message = "ignore"
@@ -27,6 +27,7 @@ remove_ignored_users = "pull_ignored_users"
 add_warning = "add_warning"
 remove_warning = "pull_warning"
 set_warning = "set_warning"
+clear_warning = "clear_warning"
 
 #Keyword Commands
 add_keyword = "add_keyword"

@@ -16,10 +16,11 @@ async def blacklistChronicle(client, message):
 		value = value.strip()
 		#If this is not the confirmation command
 		#User confirmation is made by adding their channel id at the ned of the message
-		if value != message.channel.id:
+		print(value)
+		if value != str(message.channel.id):
 				await lib.message.send(message.channel,
             "Are you sure you wish to Blacklist this channel? If you do, nothing will ever be recorded from this channel and it will not be seen or accessed on the site! If you are sure about it, type !c blacklist {id}"
-            .format(id=message.channel.id), deleteTime=25.0)
+            .format(id=message.channel.id), time=25.0)
 		else:
 				lib.db.queryDatabase(
             "UPDATE chronicles_info SET is_blacklisted = TRUE WHERE channel_id={id};"

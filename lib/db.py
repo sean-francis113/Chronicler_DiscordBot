@@ -2,6 +2,7 @@ import os
 import pymysql.cursors
 import pymysql.err
 import lib.error
+import lib.log
 import datetime
 
 
@@ -38,14 +39,16 @@ def queryDatabase(query,
                   commit=False,
                   getResult=False,
                   closeConn=True):
+									
     if checkExists == True:
+
         if (tablename == "" or tablename is None) or checkIfTableExists(
                 connectToDatabase().cursor(), tablename) == False:
             if (reportExistance):
                 if (channel != None):
                     lib.error.postError(
                         client, channel,
-                        "ERROR #1021: If you are seeing this Error Message, please email us immediately by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com. Include this Error Number and what you were doing right before the message."
+                        "ERROR #1021: If you are seeing this Error Message, please contact us immediately by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com. Include this Error Number and what you were doing right before the message."
                     )
             return 0, None, False
 

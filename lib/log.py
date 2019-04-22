@@ -1,34 +1,24 @@
 import datetime
-import requests
-import os
+import lib.db
 
 
-def openLogFile(channel):
-    filePath = ("{url}/logs/{channel_id}_{date}.txt".format(
-				url=os.environ.get("CHRONICLER_WEBSITE_URL"), 
-        channel_id=channel.id,
-        date=datetime.datetime.now().strftime("%Y-%m-%d")))
+def logEvent(client, channel, message=None, eType="General", string="", connection=None, close=True):
+		eventCreator = ""
+		eventTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		eventStr = ""
 
-    logFile = requests.get(filePath)
+		if message != None:
+				eventCreator = message.author.name
+				eventStr = str(message.content)
+		else:
+				eventCreator = "The Chronicler"
+				eventStr = string
 
-    return logFile, filePath
-
-
-def closeLogFile(logFile):
-    logFile.close()
-
-
-def writeToLogFile(logFile, strToWrite):
-    logFile.write(strToWrite)
-
-
-def updateLogFile(channel, strToWrite, closeFile=True):
-    logFile, filePath = openLogFile(channel)
-
-    writeToLogFile(logFile, strToWrite)
-
-    if closeFile == True:
-        closeLogFile(logFile)
-        return
-    else:
-        return logFile
+		lib.db.queryDatabase(
+        "INSERT INTO {id}_logs (log_id, log_type, log_creator, log_time, log_content) VALUES ('{creator}', '{time}', '{content}')"
+        .format(id=channel.id, creator=eventCreator, time=eventTime, content=eventStr),
+        client,
+        channel,
+				conn=connection,
+        checkExists=False,
+        closeConn=close)

@@ -20,10 +20,10 @@ async def addUserToIgnoreList(client, message):
         strippedUser = user.strip()
         for serverUser in usersInServer:
             if serverUser.nick == strippedUser:
-                combination = [serverUser.nick, serverUser.id]
+                combination = [serverUser.nick, str(serverUser.id)]
                 ignoredUsers.append(dict(zip(dict_user_keys, combination)))
             elif serverUser.name == strippedUser:
-                combination = [serverUser.name, serverUser.id]
+                combination = [serverUser.name, str(serverUser.id)]
                 ignoredUsers.append(dict(zip(dict_user_keys, combination)))
 
     conn = lib.db.connectToDatabase()

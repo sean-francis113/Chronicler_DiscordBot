@@ -27,10 +27,10 @@ async def showHelp(client, message):
 	)
 
 	helpString.append(
-		'' + cmd.prefix + ' ' + cmd.stats_general + ' - This will tell The Chronicler to post your channel"s general statistics.\n'
-		'' + cmd.prefix + ' ' + cmd.stats_keywords + ' - This will tell The Chronicler to post your channel"s keywords.\n'
-		'' + cmd.prefix + ' ' + cmd.stats_symbols + ' - This will tell The Chronicler to post your channel"s start and end symbols.\n'
-		'' + cmd.prefix + ' ' + cmd.stats_all + ' - This will tell The Chronicler to post all of your channel"s statistics.\n'
+		'' + cmd.prefix + ' ' + cmd.stats_general + ' - This will tell The Chronicler to post your channel\'s general statistics.\n'
+		'' + cmd.prefix + ' ' + cmd.stats_keywords + ' - This will tell The Chronicler to post your channel\'s keywords.\n'
+		'' + cmd.prefix + ' ' + cmd.stats_symbols + ' - This will tell The Chronicler to post your channel\'s start and end symbols.\n'
+		'' + cmd.prefix + ' ' + cmd.stats_all + ' - This will tell The Chronicler to post all of your channel\'s statistics.\n'
 		'' + cmd.prefix + ' ' + cmd.blacklist_channel + ' - This will tell The Chronicler to completely lock this channel and its Chronicle from its database after a single warning. BE CAREFUL: The moment you Confirm it, The Chronicler will irreversably prevent you from seeing any data of the Chronicle, read any record of the Chronicle from the site and nothing else in the blacklisted channel will be recorded ever again!\n'
 	)
 
