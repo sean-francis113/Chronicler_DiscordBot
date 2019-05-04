@@ -1,3 +1,4 @@
+#Import Statements
 import os
 import pymysql.cursors
 import pymysql.err
@@ -6,29 +7,22 @@ import lib.log
 import datetime
 
 
-#Connect to the Database
-#Returns: The Database Connection's Cursor
 def connectToDatabase():
+    """
+		Function That Connects to the Database
+		"""
+
+    #Connect to Database With Environment Values
     conn = pymysql.connect(
         os.environ.get("CHRONICLER_DATABASE_HOST"),
         os.environ.get("CHRONICLER_DATABASE_USER"),
         os.environ.get("CHRONICLER_DATABASE_PASSWORD"),
         os.environ.get("CHRONICLER_DATABASE_DB"))
 
+    #Return the Connection
     return conn
 
 
-#Execute a Query into Database, Connecting if Necessary, and Return the Result
-#query: String of the MySQL Query
-#client: The Discord Client.
-#message: The Message That Caused This Query, if Applicable
-#channel: The Channel That Cuased This Query, if Applicable
-#connection: The Connection That We Will Use for This Query, if Applicable
-#checkExists: Do We Need to Check if the Table Exists?
-#tablename: The Name of the Table We Want to Query. Necessary to Confirm Table Exists. Should Try to Find a More Elegant Solution.
-#commit: Do We Want to Commit the Query?
-#getResult: Do We Need to Get Some Sort of Result?
-#Returns: A Tuple of How Many Rows Were Found, The Result of the Query and if Table Exists, rowCount = 0, result=None and exists=False Otherwise
 def queryDatabase(query,
                   client,
                   channel,
@@ -39,9 +33,34 @@ def queryDatabase(query,
                   commit=False,
                   getResult=False,
                   closeConn=True):
-									
-    if checkExists == True:
+    """
+		Execute a Query into Database, Connecting if Necessary, and Return the Result if Desired
 
+		Parameters:
+		-----------
+				query (string)
+						String of the MySQL Query
+				client (discord.Client)
+						The Chronicler Client
+				channel (discord.TextChannel)
+						The Channel of the Messasge That Sent the Query/Command
+				connection (pymysql.connections.Connection, OPTIONAL)
+						The Connection to the Database. If Not Provided, a Connection Will Be Made Before Making the Query
+				checkExists (boolean, OPTIONAL)
+						If We Should Check That the Table Exists or Not. If Used, MUST Have Something in tablename.
+				tablename (string, MOSTLY OPTIONAL)
+						The Name of the Table That We Should Check the Existance of (Only Matters if checkExists is True)
+				reportExistance (boolean, OPTIONAL)
+						Should We Tell the User if the Table Does Not Exist
+				commit (boolean, OPTIONAL)
+						If We Should Commit the Query to the Database
+				getResult (boolean, OPTIONAL)
+						If We Should Get the Results of the Query
+				closeConn (boolean, OPTIONAL)
+						If We Should Close the Connection Once We Are Done With the Query
+		"""
+
+    if checkExists == True:
         if (tablename == "" or tablename is None) or checkIfTableExists(
                 connectToDatabase().cursor(), tablename) == False:
             if (reportExistance):
@@ -50,6 +69,7 @@ def queryDatabase(query,
                         client, channel,
                         "ERROR #1021: If you are seeing this Error Message, please contact us immediately by either using our online form (chronicler.seanmfrancis.net/contact.php) or emailing directly to thechroniclerbot@gmail.com. Include this Error Number and what you were doing right before the message."
                     )
+
             return 0, None, False
 
     try:
@@ -57,7 +77,7 @@ def queryDatabase(query,
         result = None
         rowCount = 0
 
-        if connection is None:
+        if connection == None:
             connection = connectToDatabase()
 
         cursor = connection.cursor()
@@ -143,10 +163,19 @@ def queryDatabase(query,
                 .format(errorNum=e.args[0], errorMessage=e))
 
 
-#Checks to See if the Provided Table Exists
-#cursor: The Database Connection's Cursor
-#tablename: The Name of the Table We Want to Confirm Exists
 def checkIfTableExists(cursor, tablename):
+    """
+		Function That Checks to See if the Provided Table Exists
+
+		Parameters:
+		-----------
+				cursor (pymysql.connections.Cursor)
+						The MySQL Connection's Cursor
+				tablename (string)
+						The Name of the Table We Want to Check
+		"""
+
+    #Query the Database
     cursor.execute("""
         SELECT COUNT(*)
         FROM information_schema.tables
@@ -154,16 +183,30 @@ def checkIfTableExists(cursor, tablename):
         """.format(
         db=os.environ.get("CHRONICLER_DATABASE_DB"),
         table=tablename.replace('\'', '\'\'')))
+
+    #If We Find the Table
     if cursor.fetchone()[0] == 1:
         cursor.close()
         return True
+
+    #Otherwise
     else:
         cursor.close()
         return False
 
 
-#Updates the Channel's Date Last Modified Field in the Database
 def updateModifiedTime(client, channel):
+    """
+		Function That Updates the Channel's Date Last Modified Field in the Database
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				channel (discord.TextChannel)
+						The Channel That Will Have its Time Updated
+		"""
+
     queryDatabase(
         "UPDATE chronicles_info SET date_last_modified=\"{time}\" WHERE channel_id=\"{id}\";"
         .format(

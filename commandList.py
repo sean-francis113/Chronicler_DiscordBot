@@ -9,6 +9,7 @@ show_help = "help"
 create_channel = "create_channel"
 whitelist_channel = "whitelist"
 blacklist_channel = "blacklist"
+rename_channel = "rename_channel"
 
 #Story Commands
 rewrite_story = "rewrite"

@@ -4,9 +4,20 @@ import os
 
 
 async def getChronicle(client, message):
+		"""
+		Function That Generates and Returns a Link to the Story on the Website
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Held the Command
+		"""
+
 		rowCount, retval, exists = lib.db.queryDatabase(
         "SELECT is_blacklisted FROM chronicles_info WHERE channel_id={id}".
-        format(id=message.channel.id),
+        format(id=str(message.channel.id)),
         client,
         channel=message.channel,
         checkExists=True,
@@ -18,7 +29,7 @@ async def getChronicle(client, message):
 		if rowCount == 1:
 				if retval[0] == False:
 						await lib.message.send(message.channel, "Link to Your Chronicle: ", delete=False)
-						await lib.message.send(message.channel, "{url}/chronicle.php?id={id}&page=1".format(url=os.environ.get("CHRONICLER_WEBSITE_URL"),id=message.channel.id), ignoreStyle=True, delete=False)
+						await lib.message.send(message.channel, "{url}/chronicle.php?id={id}&page=1".format(url=os.environ.get("CHRONICLER_WEBSITE_URL"),id=str(message.channel.id)), ignoreStyle=True, delete=False)
 						await lib.reaction.reactThumbsUp(client, message)
 				elif retval[0] == True:
 						await lib.message.send(

@@ -5,36 +5,70 @@ import lib.message
 
 
 async def sendIgnoreReaction(client, message):
-    await lib.reaction.reactThumbsUp(client, message)
+		"""
+		Function That Sends a Reaction When the User Specifies a Message to be Ignored
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chroniler Client
+				message (discord.Message)
+						The Message to Be Ignored By The Chronicler
+		"""
+		
+		await lib.reaction.reactThumbsUp(client, message)
 
 
 async def addUserToIgnoreList(client, message):
-    ignoredUsers = []
-    dict_user_keys = ["name", "id"]
+		"""
+		Function That Adds the Specified Users in the Message to The Channel's Ignore List
 
-    value = message.content.replace('' + cmd.prefix + ' ' + cmd.ignore_users,
-                                    '')
-    usersFound = value.split('|')
-    usersInServer = client.get_all_members()
-    for user in usersFound:
-        strippedUser = user.strip()
-        for serverUser in usersInServer:
-            if serverUser.nick == strippedUser:
-                combination = [serverUser.nick, str(serverUser.id)]
-                ignoredUsers.append(dict(zip(dict_user_keys, combination)))
-            elif serverUser.name == strippedUser:
-                combination = [serverUser.name, str(serverUser.id)]
-                ignoredUsers.append(dict(zip(dict_user_keys, combination)))
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Had the Command
+		"""
 
-    conn = lib.db.connectToDatabase()
+		#The Array of Ignored Users to Be Filled
+		ignoredUsers = []
 
-    #Need to Make Sure Each Message
+		#The Keys of the Dictionary to Be Used
+		dict_user_keys = ["name", "id"]
 
-    for user in ignoredUsers:
-        lib.db.queryDatabase(
+		#Grab All of the Users In the Message
+		value = message.content.replace('' + cmd.prefix + ' ' + cmd.ignore_users, '')
+		usersFound = value.split('|')
+
+		#Grab All of the Users in the Server to Reference
+		usersInServer = message.channel.guild.members
+
+		#Look Through All of the Users in the Message
+		for user in usersFound:
+				strippedUser = user.strip()
+
+				#Look Through All of the Users in the Server
+				for serverUser in usersInServer:
+						#Make Sure We Grab the Right User, Even if They Are Using a Nickname
+						if serverUser.nick == strippedUser:
+								combination = [serverUser.nick, str(serverUser.id)]
+								ignoredUsers.append(dict(zip(dict_user_keys, combination)))
+						elif serverUser.name == strippedUser:
+								combination = [serverUser.name, str(serverUser.id)]
+								ignoredUsers.append(dict(zip(dict_user_keys, combination)))
+
+		#Connect To Database
+		conn = lib.db.connectToDatabase()
+
+		#For Users We've Found and Are Going to Ignore
+		for user in ignoredUsers:
+
+				#Add User to Database Ignore List
+				lib.db.queryDatabase(
             "INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES (\"{user_name}\", \"{user_id}\")"
             .format(
-                channel_id=message.channel.id,
+                channel_id=str(message.channel.id),
                 user_name=user["name"],
                 user_id=user["id"]),
             client,
@@ -43,74 +77,104 @@ async def addUserToIgnoreList(client, message):
             commit=False,
             checkExists=True,
             tablename="{channel_id}_ignoredUsers".format(
-                channel_id=message.channel.id),
+                channel_id=str(message.channel.id)),
             closeConn=False)
-    conn.commit()
-    conn.close()
 
-    await lib.reaction.reactThumbsUp(client, message)
+		#Commit to Database Once We Are Done
+		conn.commit()
+
+		#Close Database Connection
+		conn.close()
+
+		#Show Success
+		await lib.reaction.reactThumbsUp(client, message)
 
 
-#Deletes the Provided Users from the Ignored Users Table, if They Exists
 async def removeIgnoredUsers(client, message):
-    value = message.content.replace(
-        '' + cmd.prefix + ' ' + cmd.remove_ignored_users, '')
-    usersFound = value.split('|')
+		"""
+		Function That Deletes the Provided Users from the Ignored Users table, if They Exist
 
-    conn = lib.db.connectToDatabase()
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Has the Users to Remove
+		"""
 
-    rowCount, retval, exists = lib.db.queryDatabase(
-        "SELECT name,id FROM {channel_id}_ignoredUsers".format(
-            channel_id=message.channel.id),
+		# Grab the Users to Remove From Message
+		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_ignored_users, '')
+		usersFound = value.split('|')
+
+		#Connect to Database
+		conn = lib.db.connectToDatabase()
+
+		#Get All Users in the Ignored User Table
+		rowCount, retval, exists = lib.db.queryDatabase(
+        "SELECT name,id FROM {channel_id}_ignoredUsers".format(channel_id=str(message.channel.id)),
         client,
         message.channel,
         connection=conn,
         commit=False,
         checkExists=True,
-        tablename="{channel_id}_ignoredUsers".format(
-            channel_id=message.channel.id),
+        tablename="{channel_id}_ignoredUsers".format(channel_id=str(message.channel.id)),
         reportExistance=True,
         getResult=False,
         closeConn=False)
 
-    if exists == False:
-        return
-    elif rowCount == 0:
-        await lib.message.send(
+		#Make Sure Table Exists
+		if exists == False:
+				return
+
+		#If There Are No Users in the List
+		elif rowCount == 0:
+				await lib.message.send(
             message.channel,
             "The Chronicler could not find any users in your Ignored User List."
         )
-        return
+				return
 
-    serverUsers = client.get_all_members()
+		#Grab All of the Users in Servers
+		serverUsers = message.channel.guild.members
 
-    for user in usersFound:
-        for sUser in serverUsers:
-            if user.strip() == sUser.nick or user.strip() == sUser.name:
-                lib.db.queryDatabase(
+		#Look Through All of the Users In the Message
+		for user in usersFound:
+
+				#Look Through All of the Users in the Server
+				for sUser in serverUsers:
+						if user.strip() == sUser.nick or user.strip() == sUser.name:
+								lib.db.queryDatabase(
                     "DELETE FROM {channel_id}_ignoredUsers WHERE id=\"{userID}\""
-                    .format(channel_id=message.channel.id, userID=sUser.id),
+                    .format(channel_id=str(message.channel.id), userID=sUser.id),
                     client,
                     message.channel,
                     connection=conn,
                     commit=False,
                     getResult=False,
                     closeConn=False)
-                break
+								break
 
-    conn.commit()
-    conn.close()
+		#Commit the Database Once We Are Done
+		conn.commit()
+		#Close the Database Connection
+		conn.close()
 
-    await lib.reaction.reactThumbsUp(client, message)
+		#Show Success
+		await lib.reaction.reactThumbsUp(client, message)
 
 
-#Gets the List of Ignored Users, if any, of the Story from the Database
-#channel: The Channel to pull the Users from
-#Returns: A tuple array of {username, userID}
-def getIgnoredUsers(channel, client):
-    userList = []
-    dict_user_keys = ['name', 'id']
-    rowCount, selectedRows, exists = lib.db.queryDatabase(
+def getIgnoredUsers(client, channel):
+		"""
+		Function That Gets the List of Ignored Users, if any, of the Channel from the Database
+
+		Parameters:
+		-----------
+
+		"""
+		
+		userList = []
+		dict_user_keys = ['name', 'id']
+		rowCount, selectedRows, exists = lib.db.queryDatabase(
         "SELECT name,id FROM {id}_ignoredUsers".format(id=channel.id),
         client,
         channel,
@@ -118,11 +182,13 @@ def getIgnoredUsers(channel, client):
         tablename="{id}_ignoredUsers".format(id=channel.id),
         getResult=True,
         closeConn=True)
-
-    if rowCount == 0 or exists == False:
-        return userList
-    else:
-        for row in selectedRows:
-            combination = [row[0], row[1]]
-            userList.append(dict(zip(dict_user_keys, combination)))
-        return userList
+				
+		if rowCount == 0 or exists == False:
+				return userList
+        
+				
+		else:
+				for row in selectedRows:
+						combination = [row[0], row[1]]
+						userList.append(dict(zip(dict_user_keys, combination)))
+				return userList

@@ -3,98 +3,131 @@ import commandList as cmd
 
 
 async def addSymbol(client, message):
-    value = message.content.replace('' + cmd.prefix + ' ' + cmd.add_symbol, '')
-    symbolValues = value.split('|')
+		"""
+		Functions That Adds a Symbol in the Database
 
-    conn = lib.db.connectToDatabase()
-
-    rowCount, result, exists = lib.db.queryDatabase(
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Held the Command
+		"""
+		
+		value = message.content.replace('' + cmd.prefix + ' ' + cmd.add_symbol, '')
+		symbolValues = value.split('|')
+		
+		conn = lib.db.connectToDatabase()
+		
+		rowCount, result, exists = lib.db.queryDatabase(
         "SELECT start FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(
-            id=message.channel.id, start=symbolValues[0].strip()),
+            id=str(message.channel.id), start=symbolValues[0].strip()),
         client,
         message.channel,
         connection=conn,
         checkExists=True,
-        tablename="{id}_ignoredSymbols".format(id=message.channel.id),
+        tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
         getResult=True,
         closeConn=False)
-
-    if exists == False:
-        conn.close()
-        return
-    else:
-        if rowCount == 0:
-            lib.db.queryDatabase(
+				
+		if exists == False:
+				conn.close()
+				return
+				
+		else:
+				if rowCount == 0:
+						lib.db.queryDatabase(
                 "INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")"
                 .format(
-                    id=message.channel.id,
+                    id=str(message.channel.id),
                     start=symbolValues[0].strip(),
                     end=symbolValues[1].strip()),
                 client,
                 message.channel,
                 connection=conn,
                 checkExists=False,
-                tablename="{id}_ignoredSymbols".format(id=message.channel.id),
+                tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
                 commit=True,
                 closeConn=True)
-        else:
-            lib.db.queryDatabase(
+				else:
+						lib.db.queryDatabase(
                 "UPDATE {id}_ignoredSymbols SET end=\"{end}\" WHERE start=\"{start}\""
                 .format(
-                    id=message.channel.id,
+                    id=str(message.channel.id),
                     start=symbolValues[0].strip(),
                     end=symbolValues[1].strip()),
                 client,
                 message.channel,
                 connection=conn,
                 checkExists=False,
-                tablename="{id}_ignoredSymbols".format(id=message.channel.id),
+                tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
                 commit=True,
                 closeConn=True)
-
-    await lib.reaction.reactThumbsUp(client, message)
+								
+		await lib.reaction.reactThumbsUp(client, message)
 
 
 async def removeSymbol(client, message):
-    value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_keyword,
-                                    '')
+		"""
+		Functions That Removes a Symbol to Remove
 
-    conn = lib.db.connectToDatabase()
-
-    rowCount, retval, exists = lib.db.queryDatabase(
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Held the Command
+		"""
+		
+		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_keyword, '')
+		
+		conn = lib.db.connectToDatabase()
+		
+		rowCount, retval, exists = lib.db.queryDatabase(
         "SELECT start FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(
-            id=message.channel.id, start=value.strip()),
+            id=str(message.channel.id), start=value.strip()),
         client,
         message.channel,
         connection=conn,
         checkExists=True,
-        tablename="{id}_ignoredSymbols".format(id=message.channel.id),
+        tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
         getResult=True,
         closeConn=False)
-
-    if exists == False:
-        conn.close()
-        return
-    else:
-        if rowCount == 1:
-            lib.db.queryDatabase(
+				
+		if exists == False:
+				conn.close()
+				return
+				
+		else:
+				if rowCount == 1:
+						lib.db.queryDatabase(
                 "DELETE FROM {id}_ignoredSymbols WHERE start=\"{start}\"".
-                format(id=message.channel.id, start=value.strip()),
+                format(id=str(message.channel.id), start=value.strip()),
                 client,
                 message.channel,
                 connection=conn,
                 checkExists=False,
                 commit=True,
                 closeConn=True)
-            await lib.reaction.reactThumbsUp(client, message)
-        elif rowCount == 0:
-            await lib.reaction.reactThumbsDown(client, message)
-            await lib.message.send(message.channel,
+						await lib.reaction.reactThumbsUp(client, message)
+						
+				elif rowCount == 0:
+						await lib.reaction.reactThumbsDown(client, message)
+						await lib.message.send(message.channel,
                 "The Chronicler could not find the symbol in its database for this channel."
             )
 
 def replaceMarkdown(string):
-		# Current Markdown Known (as of 4/4/2019)
+		"""
+		Functions That Replaces the Markdown in the String with HTML tags
+
+		Parameters:
+		-----------
+				string (string)
+						The String to Remove the Markdown From
+		"""
+
+		# Current Markdown Known (as of 4/24/2019)
 		# * = Italics
 		# ** = Bold
 		# *** = Bold Italics
@@ -124,9 +157,10 @@ def replaceMarkdown(string):
 		# First Check for Spoilers
 		for symbol in spoilerSymbols:
 				lastPosChecked = 0
-				while spoilerString.find(symbol[0], lastPosChecked) != -1:
+				while spoilerString.find(symbol[0], lastPosChecked + 1) != -1:
 						firstIndex = spoilerString.find(symbol[0])
 						nextIndex = spoilerString.find(symbol[0], firstIndex + len(symbol[0]))
+						lastPosChecked = firstIndex
 						if nextIndex != -1:
 								lastPosChecked = nextIndex + len(symbol[0])
 								spoilerStart.append(firstIndex)
@@ -140,9 +174,10 @@ def replaceMarkdown(string):
 		for symbol in codeSymbols:
 				lastPosChecked = 0
 				#Run Functions for Multiline Code Blocks
-				while codeString.find(symbol[0], lastPosChecked) != -1:
+				while codeString.find(symbol[0], lastPosChecked + 1) != -1:
 						firstIndex = codeString.find(symbol[0])
 						nextIndex = codeString.find(symbol[0], firstIndex + len(symbol[0]))
+						lastPosChecked = firstIndex
 						if nextIndex != -1:
 								lastPosChecked = nextIndex + len(symbol[0])
 								if len(spoilerStart) == 0 or len(spoilerEnd) == 0:
@@ -168,9 +203,10 @@ def replaceMarkdown(string):
 		#Finally Check Remaining Markdown
 		for symbol in markdownSymbols:
 				lastPosChecked = 0
-				while markdownString.find(symbol[0], lastPosChecked) != -1:
+				while markdownString.find(symbol[0], lastPosChecked + 1) != -1:
 						firstIndex = markdownString.find(symbol[0])
 						nextIndex = markdownString.find(symbol[0], firstIndex + len(symbol[0]))
+						lastPosChecked = firstIndex
 						i = 0
 						if nextIndex != -1:
 							lastPosChecked = nextIndex + len(symbol[0])
@@ -197,25 +233,48 @@ def replaceMarkdown(string):
 
 
 def pluckSymbols(string, start, end, removeInside=True):
-    strToEdit = string
-    startIndex = strToEdit.find(start)
-    if startIndex > -1:
-        endIndex = strToEdit.find(end)
-        if endIndex > startIndex:
-            if removeInside == True:
-                strToEdit = strToEdit[:startIndex] + strToEdit[
+		"""
+		Functions That Pulls the Symbols from the String
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Held the Command
+		"""
+		
+		strToEdit = string
+		startIndex = strToEdit.find(start)
+		
+		if startIndex > -1:
+				endIndex = strToEdit.find(end)
+				if endIndex > startIndex:
+						if removeInside == True:
+								strToEdit = strToEdit[:startIndex] + strToEdit[
                     (endIndex + len(end)):]
-            else:
-                strToEdit = strToEdit[:startIndex] + strToEdit[
+						else:
+								strToEdit = strToEdit[:startIndex] + strToEdit[
                     (startIndex + len(start)):endIndex] + strToEdit[
                         (endIndex + len(end)):]
-            strToEdit = pluckSymbols(' '.join(strToEdit.split()), start, end)
-    return strToEdit
+						strToEdit = pluckSymbols(' '.join(strToEdit.split()), start, end)
+		return strToEdit
 
 
 def getSymbols(client, channel):
-    symbolList = []
-    rowCount, retval, exists = lib.db.queryDatabase(
+		"""
+		Functions That Gets the Symbols from the Database
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				channel (discord.Channel)
+						The Channel to Get the Symbols For
+		"""
+		
+		symbolList = []
+		rowCount, retval, exists = lib.db.queryDatabase(
         "SELECT start,end FROM {id}_ignoredSymbols".format(id=channel.id),
         client,
         channel,
@@ -223,18 +282,19 @@ def getSymbols(client, channel):
         tablename="{id}_ignoredSymbols".format(id=channel.id),
         getResult=True,
         closeConn=True)
-
-    if rowCount == 0:
-        return symbolList
-    else:
-        i = 0
-        if (rowCount == 1):
-            while i < len(retval):
-                combination = (retval[i], retval[i + 1])
-                symbolList.append(combination)
-                i += 2
-        else:
-            while i < rowCount:
-                symbolList.append(retval[i])
-                i += 1
-        return symbolList
+				
+		if rowCount == 0:
+				return symbolList
+    
+		else:
+				i = 0
+				if (rowCount == 1):
+						while i < len(retval):
+								combination = (retval[i], retval[i + 1])
+								symbolList.append(combination)
+								i += 2
+				else:
+						while i < rowCount:
+								symbolList.append(retval[i])
+								i += 1
+				return symbolList

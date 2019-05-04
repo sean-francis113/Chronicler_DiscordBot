@@ -1,3 +1,4 @@
+#Import Statements
 import discord
 import datetime
 import lib.db
@@ -9,8 +10,22 @@ import commandList as cmd
 
 
 async def createChroniclerChannel(client, message, createNew=True):
+		"""
+		Function That Creates a New Channel Both in the Discord Server and the Database, Using Different Values (Provided or Default) to Customize the Channel.
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Sent the Command
+				createNew (boolean, OPTIONAL)
+						Flag to Determine if a Channel Should be Created in the Discord Server
+		"""
+
 		#Initialize Variables
 		isPrivate = False
+		isNSFW = False
 		dict_word_keys = ['word', 'replacement']
 		keywords = []
 		hasWarnings = False
@@ -55,24 +70,37 @@ async def createChroniclerChannel(client, message, createNew=True):
         '' + cmd.prefix + ' ' + cmd.whitelist_channel, '')
 		channelOptionsStr = channelOptionsStr.strip()
 
+		#Array of Channel Options Provided by the User
 		channelOptionsArr = []
 
+		#Grab All Channel Options if Any Have Been Provided
 		if (channelOptionsStr.find('=') != -1):
 				channelOptionsStr = channelOptionsStr.replace('; ', ';')
 				channelOptionsArr = channelOptionsStr.split(';')
-				print("Options Added: " + str(len(channelOptionsArr)))
+
+		#Look Through All of the Options Provided, if Any
 		for option in channelOptionsArr:
-				print(option)
+
+				#If a Channel Name Has Been Provided
 				if (option.startswith('channel_name=') and createNew == True):
 						value = option.replace('channel_name=', '')
 						channelName = value.strip()
-						print(channelName)
-				if (option.startswith('is_private=')):
+
+				#If the Private Flag Has Been Provided
+				elif (option.startswith('is_private=')):
 						value = option.replace('is_private=', '')
 						value = value.lower()
 						if (value.find('true') != -1):
 								isPrivate = True
-						print("Private: " + value)
+
+				#If the NSFW Flag Has Been Provided
+				elif (option.startswith('is_nsfw=')):
+						value = option.replace('is_nsfw=', '')
+						value = value.lower()
+						if (value.find('true') != -1):
+								isNSFW = True
+
+				#If Keywords Have Been Provided
 				elif (option.startswith('keyword=')):
 						value = option.replace('keyword=', '')
 						keywordValues = value.split('|')
@@ -80,9 +108,13 @@ async def createChroniclerChannel(client, message, createNew=True):
                 keywordValues[0].strip(), keywordValues[1].strip()
             ]
 						keywords.append(dict(zip(dict_word_keys, finalCombination)))
+
+				#If Warnings Have Been Provided
 				elif (option.startswith('warnings=')):
 						value = option.replace('warnings=', '')
 						warnings = value
+
+				#If Users to Ignore Have Been Provided
 				elif (option.startswith('ignore_users=')):
 						value = option.replace('ignore_users=', '')
 						usersFound = value.split('|')
@@ -98,6 +130,8 @@ async def createChroniclerChannel(client, message, createNew=True):
 												combination = [serverUser.name, serverUser.id]
 												ignoredUsers.append(
                             dict(zip(dict_user_keys, combination)))
+
+				#If Symbols to Ignore Have Been Provided
 				elif (option.startswith('ignore_symbols=')):
 						value = option.replace('ignore_symbols=', '')
 						symbolCombination = value.split(';')
@@ -105,6 +139,8 @@ async def createChroniclerChannel(client, message, createNew=True):
 								symbolArr = symbol.split('|')
 								ignoredSymbols.append(
                     dict(zip(dict_symbol_keys, [symbolArr[0], symbolArr[1]])))
+
+				#If the Sole Ownership Flag Has Been Provided (Only Works if the Create New Flag is On)
 				elif (option.startswith('sole_ownership=') and createNew == True):
 						value = option.replace('sole_ownership=', '')
 						value = value.lower()
@@ -121,29 +157,40 @@ async def createChroniclerChannel(client, message, createNew=True):
                     embed_links=True,
                     attach_files=True,
                     mention_everyone=True)
+
+				#If the Show Welcome Flag Has Been Provided
 				elif (option.startswith('show_welcome=')):
 						value = option.replace('show_welcome=', '')
 						value = value.lower()
 						if (value.find('false') != -1):
 								showWelcomeMessage = False
+
+				#If the Show Help Flag Has Been Provided
 				elif (option.startswith('show_help=')):
 						value = option.replace('show_help=', '')
 						value = value.lower()
 						if (value.find('false') != -1):
 								showHelpMessage = False
+
+				#If the Rewrite Flag Has Been Provided (Only Works if the Create New Flag is Off)
 				elif (option.startswith('rewrite=') and createNew == False):
 						value = option.replace('rewrite=', '')
 						lowerValue = value.lower()
 						if lowerValue.strip() == 'true':
 								willRewrite = True
 								
+		#The Newly Created Channel
 		chroniclerChannel = None
 		
+		#If We Are Creating a New Channel in Discord
 		if createNew == True:
         #Create the New Channel
-				chroniclerChannel = await message.channel.guild.create_text_channel(channelName)
+				chroniclerChannel = await message.channel.guild.create_text_channel(channelName, nsfw=isNSFW)
+
+		#Otherwise		
 		else:
 				chroniclerChannel = message.channel
+				chroniclerChannel.edit(nsfw=isNSFW)
 
 		#Set Channel Permissions
 		await chroniclerChannel.set_permissions(message.channel.guild.default_role, overwrite=everyone_perms)
@@ -151,13 +198,12 @@ async def createChroniclerChannel(client, message, createNew=True):
 		await chroniclerChannel.set_permissions(client.user, overwrite=user_perms)
 		
 		#Connect to Database
-    #Need connection for Future Executions
 		conn = lib.db.connectToDatabase()
 		
 		#Create Channel Tables
 		lib.db.queryDatabase(
         "CREATE TABLE {id}_contents (entry_id INT AUTO_INCREMENT PRIMARY KEY, is_pinned BOOLEAN DEFAULT(FALSE) NOT NULL, entry_type VARCHAR(255) NOT NULL DEFAULT(\"In-Character\"), char_count INT NOT NULL, word_count INT NOT NULL, entry_owner TEXT, entry_editted MEDIUMTEXT, entry_original MEDIUMTEXT)"
-        .format(id=chroniclerChannel.id),
+        .format(id=str(chroniclerChannel.id)),
         client,
         message.channel,
         connection=conn,
@@ -165,21 +211,21 @@ async def createChroniclerChannel(client, message, createNew=True):
         closeConn=False)
 		lib.db.queryDatabase(
         "CREATE TABLE {id}_keywords (kw_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, word TEXT NOT NULL, replacement TEXT NOT NULL)"
-        .format(id=chroniclerChannel.id),
+        .format(id=str(chroniclerChannel.id)),
         client,
         message.channel,
         checkExists=False,
         closeConn=False)
 		lib.db.queryDatabase(
         "CREATE TABLE {id}_ignoredUsers (iu_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, name TEXT NOT NULL, id TEXT NOT NULL)"
-        .format(id=chroniclerChannel.id),
+        .format(id=str(chroniclerChannel.id)),
         client,
         message.channel,
         checkExists=False,
         closeConn=False)
 		lib.db.queryDatabase(
         "CREATE TABLE {id}_ignoredSymbols (is_id INT AUTO_INCREMENT PRIMARY KEY, start VARCHAR(50) NOT NULL, end VARCHAR(50) NOT NULL)"
-        .format(id=chroniclerChannel.id),
+        .format(id=str(chroniclerChannel.id)),
         client,
         message.channel,
         checkExists=False,
@@ -187,10 +233,11 @@ async def createChroniclerChannel(client, message, createNew=True):
 				
 		#Add New Channel Into chronicles_info
 		lib.db.queryDatabase(
-        "INSERT INTO chronicles_info (channel_id, is_blacklisted, is_private, is_closed, channel_name, channel_owner, has_warnings, warning_list, date_last_modified) VALUES (\"{id}\", FALSE, {private}, FALSE, \"{name}\", \"{owner}\", {has_warn}, \"{warn_list}\", \"{datetime}\")"
+        "INSERT INTO chronicles_info (channel_id, is_blacklisted, is_private, is_closed, is_NSFW, channel_name, channel_owner, has_warnings, warning_list, date_last_modified) VALUES (\"{id}\", FALSE, {private}, FALSE, {NSFW}, \"{name}\", \"{owner}\", {has_warn}, \"{warn_list}\", \"{datetime}\")"
         .format(
-            id=chroniclerChannel.id,
+            id=str(chroniclerChannel.id),
             private=str(isPrivate).upper(),
+						NSFW=str(isNSFW).upper(),
             name=channelName,
             owner=message.author.name,
             has_warn=str(hasWarnings).upper(),
@@ -209,14 +256,14 @@ async def createChroniclerChannel(client, message, createNew=True):
 					lib.db.queryDatabase(
                 "INSERT INTO {id}_keywords (word, replacement) VALUES (\"{word}\", \"{replacement}\")"
                 .format(
-                    id=chroniclerChannel.id,
+                    id=str(chroniclerChannel.id),
                     word=index['word'],
                     replacement=index['replacement']),
                 client,
                 message.channel,
                 connection=conn,
                 checkExists=True,
-                tablename="{id}_keywords".format(id=chroniclerChannel.id),
+                tablename="{id}_keywords".format(id=str(chroniclerChannel.id)),
                 commit=False,
                 closeConn=False)
 					conn.commit()
@@ -227,14 +274,14 @@ async def createChroniclerChannel(client, message, createNew=True):
 						lib.db.queryDatabase(
                 "INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES (\"{user_name}\", \"{user_id}\")"
                 .format(
-                    channel_id=chroniclerChannel.id,
+                    channel_id=str(chroniclerChannel.id),
                     user_name=index['name'],
                     user_id=index['id']),
                 client,
                 message.channel,
                 connection=conn,
                 checkExists=True,
-                tablename="{id}_ignoredUsers".format(id=chroniclerChannel.id),
+                tablename="{id}_ignoredUsers".format(id=str(chroniclerChannel.id)),
                 commit=False,
                 closeConn=False)
 				conn.commit()
@@ -245,7 +292,7 @@ async def createChroniclerChannel(client, message, createNew=True):
 						lib.db.queryDatabase(
                 "INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")"
                 .format(
-                    id=chroniclerChannel.id,
+                    id=str(chroniclerChannel.id),
                     start=index['start'],
                     end=index['end']),
                 client,
@@ -253,11 +300,12 @@ async def createChroniclerChannel(client, message, createNew=True):
                 connection=conn,
                 checkExists=True,
                 tablename="{id}_ignoredSymbols".format(
-                    id=chroniclerChannel.id),
+                    id=str(chroniclerChannel.id)),
                 commit=False,
                 closeConn=False)
 				conn.commit()
 
+		#Send Welcome Message
 		openingMessage = await lib.message.send(chroniclerChannel, "Welcome to your new channel!", delete=False)
 
     #Send Welcome and Help Messages into New Channel
@@ -270,6 +318,7 @@ async def createChroniclerChannel(client, message, createNew=True):
 		if willRewrite == True:
 				await lib.record.startRewrite(client, message)
 		
+		#Close Database Connection
 		conn.cursor().close()
 		conn.close()
 

@@ -2,29 +2,41 @@
 import lib.db
 import lib.reaction
 import commandList as cmd
-import discord
 
 
-#Blacklists the Chronicle, preventing any interaction from it again
-#message: The Message with the Command
-#client: The Bot Client
 async def blacklistChronicle(client, message):
+		"""
+		Function That Blacklists the Chronicle/Channel, Preventing Any Interaction Between it and The Chronicler again.
+
+		Parameters:
+		-----------
+				message (discord.Message)
+						The Message That Holds the Command.
+				client (discord.Client)
+						The Chronicler Client
+		"""	
+
     #Remove Command From Message
 		value = message.content.replace(
         '' + cmd.prefix + ' ' + cmd.blacklist_channel, '')
-    #Remove leading and ending whitespace from message
+
+    #Remove Leading and Ending Whitespace From Message
 		value = value.strip()
-		#If this is not the confirmation command
-		#User confirmation is made by adding their channel id at the ned of the message
-		print(value)
+
+		#If This is Not the Confirmation Command
+		#User Confirmation is Made By Adding the Channel ID at the End of the Command.
 		if value != str(message.channel.id):
+				#Confirm With the Player That They Wish to Blacklist the Channel
 				await lib.message.send(message.channel,
             "Are you sure you wish to Blacklist this channel? If you do, nothing will ever be recorded from this channel and it will not be seen or accessed on the site! If you are sure about it, type !c blacklist {id}"
-            .format(id=message.channel.id), time=25.0)
+            .format(id=str(message.channel.id)), time=25.0)
+
+		#If This is the Confirmation Command
 		else:
+				#Set is_blacklisted in the Database to True.
 				lib.db.queryDatabase(
             "UPDATE chronicles_info SET is_blacklisted = TRUE WHERE channel_id={id};"
-            .format(id=message.channel.id),
+            .format(id=str(message.channel.id)),
             client,
             message.channel,
             checkExists=True,
@@ -34,5 +46,3 @@ async def blacklistChronicle(client, message):
 						
 				#Tell the User We're Done
 				await lib.reaction.reactThumbsUp(client, message)
-				
-		await lib.reaction.waitThenClearAll(client, message, 5.0)

@@ -4,10 +4,20 @@ import lib.keywords
 import lib.symbol
 
 async def closeStory(client, message):
-		#Connect to Database
+		"""
+		Functions That Closes the Story in the Database
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Held the Command
+		"""
+
 		lib.db.queryDatabase(
         "UPDATE chronicles_info SET is_closed = TRUE WHERE channel_id = {id};".
-        format(id=message.channel.id),
+        format(id=str(message.channel.id)),
         client,
         message.channel,
         checkExists=True,
@@ -15,15 +25,24 @@ async def closeStory(client, message):
         commit=True,
         closeConn=True)
 		
-		await lib.db.updateModifiedTime(client, message.channel)
 		await lib.reaction.reactThumbsUp(message, client)
 
 
 async def openStory(client, message):
-		#Connect to Database
+		"""
+		Functions That Opens the Story in the Database
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Held the Command
+		"""
+
 		lib.db.queryDatabase(
         "UPDATE chronicles_info SET is_closed = FALSE WHERE channel_id = {id};"
-        .format(id=message.channel.id),
+        .format(id=str(message.channel.id)),
         client,
         message.channel,
         checkExists=True,
@@ -35,48 +54,80 @@ async def openStory(client, message):
 		await lib.reaction.reactThumbsUp(message, client)
 
 
+def deleteChronicle(client, messageID, channelID):
+		"""
+		Functions That Deletes a Message From the Database
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				messageID (integer)
+						The ID Number of the Message to Delete
+				channelID (integer)
+						The ID Number of the Channel the Message is in
+		"""
+
+		conn = lib.db.connectToDatabase()
+		cursor = conn.cursor()
+
+		cursor.execute("DELETE FROM {channel_id}_contents WHERE message_id={message_id}".format(channel_id=str(channelID), message_id=str(messageID)))
+
+		conn.commit()
+		cursor.close()
+		conn.close()
+
+
 #Edits the Current Chronicle
 #database: The Database to find the Chronicle
-#oldMessage: The Original Message Contents
-#newMessage: The New Message Contents
-def editChronicle(client, oldMessage, newMessage):
+#message: The Original Message Contents
+#message: The New Message Contents
+def editChronicle(client, message):
+		"""
+		Functions That Edits a Message in the Database
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				message (discord.Message)
+						The Message That Held the Command
+		"""
+
 		#Connect to Database
 		connection = lib.db.connectToDatabase()
 		
 		rowCount, retval, exists = lib.db.queryDatabase(
-        "SELECT * FROM {id}_contents".format(id=newMessage.channel.id),
+        "SELECT * FROM {id}_contents".format(id=str(message.channel.id)),
         client,
-        oldMessage.channel,
+        message.channel,
         connection=connection,
         checkExists=True,
-        tablename="{id}_contents".format(id=oldMessage.channel.id),
+        tablename="{id}_contents".format(id=str(message.channel.id)),
         getResult=True,
         closeConn=False)
-				
+
 		for row in retval:
         #0 = entry_id
-        #5 = entry_original
-				if row[5] == oldMessage.content:
+        #1 = message_id
+				if row[1] == str(message.id):
 						lib.db.queryDatabase(
                 "UPDATE {id}_contents SET entry_original=\"{new}\" WHERE entry_id={entry_id};"
                 .format(
-                    id=newMessage.channel.id,
-                    new=newMessage.content,
+                    id=str(message.channel.id),
+                    new=message.content,
                     entry_id=row[0]),
                 client,
-                oldMessage.channel,
+                message.channel,
                 connection=connection,
                 commit=False,
                 closeConn=False)
-								
-								
-						editted_content = newMessage.content
+
+						editted_content = message.content
 						
-						editted_content = lib.symbol.replaceMarkdown(editted_content)
-						
-						word_list = lib.keywords.getKeywords(client, newMessage.channel)
-						
-						symbol_list = lib.symbol.getSymbols(client, oldMessage.channel)
+						word_list = lib.keywords.getKeywords(client, message.channel)
+
+						symbol_list = lib.symbol.getSymbols(client, message.channel)
 						
 						for word in word_list:
                 #0 = word
@@ -87,17 +138,24 @@ def editChronicle(client, oldMessage, newMessage):
                 #0 = start
                 #1 = end
 								editted_content = lib.symbol.pluckSymbol(editted_content, symbol[0], symbol[1])
-										
+
+						editted_content = lib.symbol.replaceMarkdown(editted_content)
+
+						is_pinned = message.pinned
+
 						lib.db.queryDatabase(
-                "UPDATE {id}_contents SET entry_editted=\"{new}\" WHERE entry_id={entry_id};"
+                "UPDATE {id}_contents SET entry_editted=\"{new}\", is_pinned={pinned} WHERE entry_id={entry_id};"
                 .format(
-                    id=newMessage.channel.id,
+                    id=str(message.channel.id),
                     new=editted_content,
+										pinned=str(is_pinned).upper(),
                     entry_id=row[0]),
                 client,
-                oldMessage.channel,
+                message.channel,
                 connection=connection,
                 commit=True,
                 closeConn=True)
-								
-		lib.db.updateModifiedTime(client, oldMessage.channel)
+
+						break
+
+		lib.db.updateModifiedTime(client, message.channel)

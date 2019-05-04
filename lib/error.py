@@ -1,3 +1,4 @@
+#Import Statements
 import asyncio
 import lib.message
 
@@ -7,6 +8,19 @@ async def postErrorAsync(client, channel, error):
 
 
 def postError(client, channel, error):
-    loop = asyncio.new_event_loop()
-    yield from postErrorAsync(client, channel, error)
-    loop.stop()
+		"""
+		Posts a Provided Error to the User
+
+		Parameters:
+		-----------
+				client (discord.Client)
+						The Chronicler Client
+				channel (discord.TextChannel)
+						The Channel That the Error Will be Posted To
+				error (string)
+						The Error That Will be Posted
+
+		"""
+		loop = asyncio.new_event_loop()
+		yield from postErrorAsync(client, channel, error)
+		loop.stop()
