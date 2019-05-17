@@ -21,8 +21,8 @@ set_privacy = "set_privacy"
 
 #Ignore Commands
 ignore_message = "ignore"
-ignore_users = "ignore_users"
-remove_ignored_users = "pull_ignored_users"
+ignore_users = "ignore_user"
+remove_ignored_users = "pull_ignored_user"
 
 #Warning Commands
 add_warning = "add_warning"
@@ -36,7 +36,7 @@ remove_keyword = "pull_keyword"
 
 #Symbol Commands
 add_symbol = "add_symbol"
-remove_symbol = "remove_symbol"
+remove_symbol = "pull_symbol"
 
 #Display Link Commands
 story_link = "get_link"

@@ -84,10 +84,7 @@ def queryDatabase(query,
         rowCount = cursor.execute(query)
 
         if getResult == True and rowCount > 0:
-            if rowCount == 1:
-                result = cursor.fetchone()
-            elif rowCount > 1:
-                result = cursor.fetchall()
+            result = cursor.fetchall()
 
         if commit == True:
             connection.commit()

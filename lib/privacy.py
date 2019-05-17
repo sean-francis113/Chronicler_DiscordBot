@@ -23,7 +23,7 @@ async def setPrivacy(client, message):
 		if lowerValue.strip() == "true":
         #Update Chronicle in Database
 				lib.db.queryDatabase(
-            "UPDATE chronicles_info SET is_private = TRUE WHERE channel_id={id};"
+            "UPDATE chronicles_info SET is_private=TRUE WHERE channel_id={id};"
             .format(id=str(message.channel.id)),
             client,
             message.channel,
@@ -35,7 +35,7 @@ async def setPrivacy(client, message):
 		elif lowerValue.strip() == "false":
         #Update Chronicle in Database
 				lib.db.queryDatabase(
-            "UPDATE chronicles_info SET is_private = FALSE WHERE channel_id={id};"
+            "UPDATE chronicles_info SET is_private=FALSE WHERE channel_id={id};"
             .format(id=str(message.channel.id)),
             client,
             message.channel,

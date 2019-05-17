@@ -31,7 +31,8 @@ async def addKeyword(client, message):
         connection=conn,
         checkExists=True,
         tablename="{id}_keywords".format(id=str(message.channel.id)),
-        getResult=True)
+        getResult=True,
+				closeConn=False)
 				
 		#If the Table Does Not Exist
 		if exists == False:
@@ -53,7 +54,8 @@ async def addKeyword(client, message):
                 connection=conn,
                 checkExists=False,
                 tablename="{id}_keywords".format(id=str(message.channel.id)),
-                commit=True)
+                commit=True,
+								closeConn=False)
 
 				#Otherwise
 				else:
@@ -68,7 +70,8 @@ async def addKeyword(client, message):
                 connection=conn,
                 checkExists=False,
                 tablename="{id}_keywords".format(id=str(message.channel.id)),
-                commit=True)
+                commit=True,
+								closeConn=False)
 		
 		conn.close()
 		await lib.reaction.reactThumbsUp(client, message)
@@ -101,7 +104,8 @@ async def removeKeyword(client, message):
         connection=conn,
         checkExists=True,
         tablename="{id}_keywords".format(id=str(message.channel.id)),
-        getResult=True)
+        getResult=True,
+				closeConn=False)
 
 		#If the Table Does Not Exist
 		if exists == False:
@@ -116,7 +120,8 @@ async def removeKeyword(client, message):
                 message.channel,
                 connection=conn,
                 checkExists=False,
-                commit=True)
+                commit=True,
+								closeConn=False)
 						await lib.reaction.reactThumbsUp(client, message)
 				elif rowCount == 0:
 						await lib.reaction.reactThumbsDown(client, message)
@@ -159,16 +164,9 @@ def getKeywords(client, channel):
 
 		#Otherwise
 		else:
-				i = 0
-				if (rowCount == 1):
-						while i < len(retval):
-								combination = (retval[i], retval[i + 1])
-								wordList.append(combination)
-								i += 2
-				else:
-						while i < rowCount:
-								wordList.append(retval[i])
-								i += 1
+				for row in retval:
+						print(row)
+						wordList.append((row[0], row[1]))
 				return wordList
 
 

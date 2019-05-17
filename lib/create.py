@@ -202,7 +202,7 @@ async def createChroniclerChannel(client, message, createNew=True):
 		
 		#Create Channel Tables
 		lib.db.queryDatabase(
-        "CREATE TABLE {id}_contents (entry_id INT AUTO_INCREMENT PRIMARY KEY, is_pinned BOOLEAN DEFAULT(FALSE) NOT NULL, entry_type VARCHAR(255) NOT NULL DEFAULT(\"In-Character\"), char_count INT NOT NULL, word_count INT NOT NULL, entry_owner TEXT, entry_editted MEDIUMTEXT, entry_original MEDIUMTEXT)"
+        "CREATE TABLE {id}_contents (entry_id INT AUTO_INCREMENT PRIMARY KEY, message_id TEXT NOT NULL, is_pinned BOOLEAN DEFAULT(FALSE) NOT NULL, entry_type VARCHAR(255) NOT NULL DEFAULT(\"In-Character\"), char_count INT NOT NULL, word_count INT NOT NULL, entry_owner TEXT, entry_editted MEDIUMTEXT, entry_original MEDIUMTEXT)"
         .format(id=str(chroniclerChannel.id)),
         client,
         message.channel,

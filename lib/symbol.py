@@ -79,8 +79,10 @@ async def removeSymbol(client, message):
 						The Message That Held the Command
 		"""
 		
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_keyword, '')
+		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_symbol, '')
 		
+		print(value)
+
 		conn = lib.db.connectToDatabase()
 		
 		rowCount, retval, exists = lib.db.queryDatabase(
@@ -94,6 +96,8 @@ async def removeSymbol(client, message):
         getResult=True,
         closeConn=False)
 				
+		print(str(rowCount))
+
 		if exists == False:
 				conn.close()
 				return
@@ -287,14 +291,7 @@ def getSymbols(client, channel):
 				return symbolList
     
 		else:
-				i = 0
-				if (rowCount == 1):
-						while i < len(retval):
-								combination = (retval[i], retval[i + 1])
-								symbolList.append(combination)
-								i += 2
-				else:
-						while i < rowCount:
-								symbolList.append(retval[i])
-								i += 1
+				for row in retval:
+						print(row)
+						symbolList.append((row[0], row[1]))
 				return symbolList

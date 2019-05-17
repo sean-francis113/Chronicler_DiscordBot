@@ -42,7 +42,7 @@ async def postInvalidComment(message):
 
 @client.event
 async def on_raw_message_delete(payload):
-		"""
+    """
 		Discord Event Called When Any Message Has Been Deleted.
 		Will Try to Find the Old Message in the Chronicle and Delete It.
 
@@ -51,18 +51,19 @@ async def on_raw_message_delete(payload):
 				payload (discord.RawMessageUpdateEvent)
 						The Data of the Deleted Message.
 		"""
-		
-		#Grab the Message and Channel IDs From Payload
-		messageID = payload.message_id
-		channelID = payload.channel_id
-		
-		#Delete Message From Database
-		lib.story.deleteChronicle(client, messageID, channelID)
+
+    #Grab the Message and Channel IDs From Payload
+    messageID = payload.message_id
+    channelID = payload.channel_id
+    serverID = payload.guild_id
+
+    #Delete Message From Database
+    lib.story.deleteChronicle(client, messageID, channelID)
 
 
 @client.event
 async def on_raw_message_edit(payload):
-		"""
+    """
 		Discord Event Called When Any Message Has Been Editted.
 		Will Try to Find the Old Message in the Chronicle and Replace it With the New Message.
 
@@ -71,13 +72,13 @@ async def on_raw_message_edit(payload):
 				payload (discord.RawMessageUpdateEvent)
 						The Data of the Editted Message.
 		"""
-		
-		#Grab the Message From Payload
-		message = await lib.message.getMessageFromPayload(client, payload)
-		
-		if message != None:
-				#Edit the Message in the Database
-				lib.story.editChronicle(client, message)
+
+    #Grab the Message From Payload
+    message = await lib.message.getMessageFromPayload(client, payload)
+
+    if message != None:
+        #Edit the Message in the Database
+        lib.story.editChronicle(client, message)
 
 
 @client.event
@@ -117,8 +118,9 @@ async def on_guild_channel_delete(channel):
         checkExists=True,
         tablename="chronicles_info")
 
-    #Update the Last Modified Time in the Database
-    await lib.db.updateModifiedTime(client, channel)
+    if channel != None:
+        #Update the Last Modified Time in the Database
+        await lib.db.updateModifiedTime(client, channel)
 
 
 @client.event
@@ -373,7 +375,7 @@ async def on_message(message):
                 delete=False)
 
             #Make Sure The Chronicle Can Record
-            if lib.validation.checkIfCanPost(client, message) is True:
+            if lib.validation.checkIfCanPost(client, message):
                 await lib.message.edit(
                     client, progressMessage,
                     "Validation Successful. Posting to Database.")
@@ -381,8 +383,9 @@ async def on_message(message):
 
             #Tell the User That Validation Failed
             else:
-                await lib.message.edit(client, progressMessage,
-                                       "Validation Failed.")
+                await lib.message.edit(
+                    client, progressMessage,
+                    "Validation Failed. Is the Channel Closed?")
 
             #Wait a Few Seconds, Then Clear All Chronicler Reactions From the User's Message
             await lib.reaction.waitThenClearAll(client, message)

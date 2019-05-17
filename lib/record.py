@@ -44,9 +44,6 @@ async def postToDatabase(client, message):
             taglessStr = taglessStr[:startIndex] + taglessStr[
                 midIndex:endIndex] + taglessStr[endIndex + len("</span>"):]
 
-    print(original_content)
-    print(editted_content)
-
     #Keep Any Quotes in the Message
     original_content = original_content.replace("'", "\\'")
     editted_content = editted_content.replace("'", "\\'")

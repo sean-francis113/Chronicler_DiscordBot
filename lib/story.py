@@ -71,6 +71,11 @@ def deleteChronicle(client, messageID, channelID):
 		conn = lib.db.connectToDatabase()
 		cursor = conn.cursor()
 
+		exists = lib.db.checkIfTableExists(cursor, "{id}_contents")
+
+		if exists == False:
+				return
+
 		cursor.execute("DELETE FROM {channel_id}_contents WHERE message_id={message_id}".format(channel_id=str(channelID), message_id=str(messageID)))
 
 		conn.commit()
@@ -110,6 +115,7 @@ def editChronicle(client, message):
 		for row in retval:
         #0 = entry_id
         #1 = message_id
+				print(row)
 				if row[1] == str(message.id):
 						lib.db.queryDatabase(
                 "UPDATE {id}_contents SET entry_original=\"{new}\" WHERE entry_id={entry_id};"
