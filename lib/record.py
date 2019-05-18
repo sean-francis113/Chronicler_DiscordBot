@@ -6,7 +6,7 @@ import lib.log
 
 
 async def postToDatabase(client, message):
-    """
+		"""
 		Function That Posts the Provided Message Into the Database
 
 		Parameters:
@@ -16,39 +16,46 @@ async def postToDatabase(client, message):
 				message (discord.Message)
 						The Message to Post
 		"""
-
-    original_content = message.content
-
-    editted_content = message.content
-
-    word_list = lib.keywords.getKeywords(client, message.channel)
-    symbol_list = lib.symbol.getSymbols(client, message.channel)
-
-    for word in word_list:
-        editted_content = lib.keywords.replaceKeyword(editted_content, word[0],
+		
+		original_content = message.content
+		
+		editted_content = message.content
+		
+		word_list = lib.keywords.getKeywords(client, message.channel)
+		symbol_list = lib.symbol.getSymbols(client, message.channel)
+		
+		for word in word_list:
+				editted_content = lib.keywords.replaceKeyword(editted_content, word[0],
                                                       word[1])
-
-    for symbol in symbol_list:
-        editted_content = lib.symbol.pluckSymbols(editted_content, symbol[0],
+																											
+		for symbol in symbol_list:
+				editted_content = lib.symbol.pluckSymbols(editted_content, symbol[0],
                                                   symbol[1])
-
-    editted_content = lib.symbol.replaceMarkdown(editted_content)
-    taglessStr = editted_content
-
-    while taglessStr.find("<span class=") != -1:
-        startIndex = taglessStr.find("<span class=")
-        midIndex = taglessStr.find(">", startIndex)
-        endIndex = taglessStr.find("</span>", midIndex)
-
-        if startIndex != -1 and midIndex != -1 and endIndex != -1:
-            taglessStr = taglessStr[:startIndex] + taglessStr[
+																									
+		editted_content = lib.symbol.replaceMarkdown(editted_content)
+		
+		taglessStr = editted_content
+		
+		while taglessStr.find("<span class=") != -1:
+				startIndex = taglessStr.find("<span class=")
+				midIndex = taglessStr.find(">", startIndex)
+				endIndex = taglessStr.find("</span>", midIndex)
+				
+				if startIndex != -1 and midIndex != -1 and endIndex != -1:
+						taglessStr = taglessStr[:startIndex] + taglessStr[
                 midIndex:endIndex] + taglessStr[endIndex + len("</span>"):]
 
-    #Keep Any Quotes in the Message
-    original_content = original_content.replace("'", "\\'")
-    editted_content = editted_content.replace("'", "\\'")
+		#Handle Curly Quotes
+		original_content = original_content.replace('“','"').replace('”','"')
+		original_content = original_content.replace("‘","'").replace("’","'")
+		editted_content = editted_content.replace('“','"').replace('”','"')
+		editted_content = editted_content.replace("‘","'").replace("’","'")
 
-    lib.db.queryDatabase(
+    #Keep Any Quotes in the Message
+		original_content = original_content.replace("'", "\\'")
+		editted_content = editted_content.replace("'", "\\'")
+		
+		lib.db.queryDatabase(
         "INSERT INTO {id}_contents (message_id, is_pinned, entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{message_id}\', {pinned}, \'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')"
         .format(
             id=str(message.channel.id),
@@ -66,10 +73,10 @@ async def postToDatabase(client, message):
         tablename="{id}_contents".format(id=str(message.channel.id)),
         commit=True,
         closeConn=True)
-
-    lib.db.updateModifiedTime(client, message.channel)
-
-    await lib.reaction.reactThumbsUp(client, message)
+				
+		lib.db.updateModifiedTime(client, message.channel)
+		
+		await lib.reaction.reactThumbsUp(client, message)
 
 
 #Rewrite the Whole Chronicle From the Beginning
@@ -153,6 +160,7 @@ async def startRewrite(client,
 		for message in messageArray:
 				validUser = lib.validation.validateUser(client, message)
 				if validUser == True and message.content.startswith("!c") == False:
+						original_content = message.content
 						editted_content = message.content
 						
 						word_list = lib.keywords.getKeywords(client, message.channel)
@@ -167,9 +175,19 @@ async def startRewrite(client,
                     editted_content, symbol[0], symbol[1])
 										
 						editted_content = lib.symbol.replaceMarkdown(editted_content)
+
+						#Handle Curly Quotes
+						original_content = original_content.replace('“','"').replace('”','"')
+						original_content = original_content.replace("‘","'").replace("’","'")
+						editted_content = editted_content.replace('“','"').replace('”','"')
+						editted_content = editted_content.replace("‘","'").replace("’","'")
+
+						#Keep Any Quotes in the Message
+						original_content = original_content.replace("'", "\\'")
+						editted_content = editted_content.replace("'", "\\'")
 						
 						if editted_content != "":
-								contentArray.append((message, editted_content, message.author))
+								contentArray.append((message, original_content, editted_content, message.author))
 								
 						messageNum += 1
 										
@@ -183,27 +201,26 @@ async def startRewrite(client,
         commit=False,
         closeConn=False)
 				
-		i = 0
-		while i < len(contentArray):
-				lib.db.queryDatabase(
-            "INSERT INTO {id}_contents (message_id, is_pinned, entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{message_id}\', {pinned}, \'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')"
-            .format(
-                id=str(message.channel.id),
-                message_id=str(contentArray[i][0].id),
-                pinned=str(contentArray[i][0].pinned).upper(),
-                type="In-Character",
-                char_count=len(contentArray[i][1]),
-                word_count=len(contentArray[i][1].split(" ")),
-                entry_owner=contentArray[i][2].name,
-                entry_editted=contentArray[i][1],
-                entry_original=contentArray[i][0].content),
-            client,
-            contentArray[i][0].channel,
-            connection=conn,
-            checkExists=False,
-            commit=False,
-            closeConn=False)
-				i += 1
+		for content in contentArray:
+				if content != None:
+						lib.db.queryDatabase(
+								"INSERT INTO {id}_contents (message_id, is_pinned, entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{message_id}\', {pinned}, \'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')"
+								.format(
+										id=str(message.channel.id),
+										message_id=str(content[0].id),
+										pinned=str(content[0].pinned).upper(),
+										type="In-Character",
+										char_count=len(content[2]),
+										word_count=len(content[2].split(" ")),
+										entry_owner=content[3].name,
+										entry_editted=content[2],
+										entry_original=content[1]),
+								client,
+								content[0].channel,
+								connection=conn,
+								checkExists=False,
+								commit=False,
+								closeConn=False)
 				
 		conn.commit()
 		conn.close()

@@ -165,7 +165,6 @@ def getKeywords(client, channel):
 		#Otherwise
 		else:
 				for row in retval:
-						print(row)
 						wordList.append((row[0], row[1]))
 				return wordList
 
