@@ -33,13 +33,10 @@ def validateUser(client, message):
 		if exists == True and usersFound != None:
 				for found in usersFound:
 						ignoredID.append(found)
-
-				print(ignoredID)
 				
 				for user in ignoredID:
             #2 = Ignored User ID
 						if str(message.author.id) == str(user):
-								print("Returning False!")
 								return False
 		elif exists == True and usersFound == None:
 				return True
@@ -68,8 +65,6 @@ def checkIfCanPost(client, message):
         tablename="chronicles_info",
         getResult=True,
         closeConn=True)
-				
-		print(retval)
 		
 		if exists == True:
 				if retval[0][0] == False and retval[0][1] == False:

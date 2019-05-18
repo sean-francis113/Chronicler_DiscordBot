@@ -80,8 +80,6 @@ async def removeSymbol(client, message):
 		"""
 		
 		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_symbol, '')
-		
-		print(value)
 
 		conn = lib.db.connectToDatabase()
 		
@@ -95,8 +93,6 @@ async def removeSymbol(client, message):
         tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
         getResult=True,
         closeConn=False)
-				
-		print(str(rowCount))
 
 		if exists == False:
 				conn.close()
@@ -292,6 +288,5 @@ def getSymbols(client, channel):
     
 		else:
 				for row in retval:
-						print(row)
 						symbolList.append((row[0], row[1]))
 				return symbolList

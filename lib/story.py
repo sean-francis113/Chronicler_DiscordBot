@@ -111,11 +111,10 @@ def editChronicle(client, message):
         tablename="{id}_contents".format(id=str(message.channel.id)),
         getResult=True,
         closeConn=False)
-
+		
 		for row in retval:
         #0 = entry_id
         #1 = message_id
-				print(row)
 				if row[1] == str(message.id):
 						lib.db.queryDatabase(
                 "UPDATE {id}_contents SET entry_original=\"{new}\" WHERE entry_id={entry_id};"
