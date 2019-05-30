@@ -160,28 +160,28 @@ async def on_message(message):
             args = message.content.split(' ')
 
             #Show Welcome Command
-            if (args[1] == cmd.show_welcome):
+            if (args[1] == cmd.show_welcome["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Show Welcome Command. Posting Welcome Message.")
                 await lib.w.showWelcome(client, message)
 
             #Show Help Command
-            elif (args[1] == cmd.show_help):
+            elif (args[1] == cmd.show_help["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Show Help Command. Posting Help Messages.")
                 await lib.h.showHelp(client, message)
 
             #Rewrite Chronicle Command
-            elif (args[1] == cmd.rewrite_story):
+            elif (args[1] == cmd.rewrite_story["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Rewrite Command. Starting Rewrite Process.")
                 await lib.record.startRewrite(client, message, checkCount=100)
 
             #Set Channel Privacy Command
-            elif (args[1] == cmd.set_privacy):
+            elif (args[1] == cmd.set_privacy["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Set Privacy Command. Setting the New Privacy Setting."
@@ -189,63 +189,63 @@ async def on_message(message):
                 await lib.privacy.setPrivacy(client, message)
 
             #Add a New Keyword Command
-            elif (args[1] == cmd.add_keyword):
+            elif (args[1] == cmd.add_keyword["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Add Keyword Command. Adding Keyword(s).")
                 await lib.keywords.addKeyword(client, message)
 
             #Add a New Symbol Command
-            elif (args[1] == cmd.add_symbol):
+            elif (args[1] == cmd.add_symbol["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Add Symbol Command. Adding Symbol(s).")
                 await lib.symbol.addSymbol(client, message)
 
             #Remove a Old Symbol Command
-            elif (args[1] == cmd.remove_symbol):
+            elif (args[1] == cmd.remove_symbol["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Remove Symbol Command. Removing Symbol(s).")
                 await lib.symbol.removeSymbol(client, message)
 
             #Remove an Old Keyword Command
-            elif (args[1] == cmd.remove_keyword):
+            elif (args[1] == cmd.remove_keyword["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Remove Keyword Command. Removing Keyword(s).")
                 await lib.keywords.removeKeyword(client, message)
 
             #Close the Chronicle Command
-            elif (args[1] == cmd.close_story):
+            elif (args[1] == cmd.close_story["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Close Story Command. Closing Story.")
                 await lib.story.closeStory(client, message)
 
             #Reopen the Chronicle Command
-            elif (args[1] == cmd.open_story):
+            elif (args[1] == cmd.open_story["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Open Story Command. Opening Story.")
                 await lib.story.openStory(client, message)
 
             #Set the Chronicle's Warnings Command
-            elif (args[1] == cmd.set_warning):
+            elif (args[1] == cmd.set_warning["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Set Warning Command. Setting Chronicle Warnings.")
                 await lib.warning.setWarnings(client, message)
 
             #Add a New Chronicle Warning Command
-            elif (args[1] == cmd.add_warning):
+            elif (args[1] == cmd.add_warning["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Add Warning Command. Adding Chronicle Warnings.")
                 await lib.warning.addWarning(client, message)
 
             #Remove an Old Chronicle Warning Command
-            elif (args[1] == cmd.remove_warning):
+            elif (args[1] == cmd.remove_warning["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Remove Warning Command. Removing Chronicle Warnings."
@@ -253,7 +253,7 @@ async def on_message(message):
                 await lib.warning.removeWarning(client, message)
 
             #Clear All Warnings Command
-            elif (args[1] == cmd.clear_warning):
+            elif (args[1] == cmd.clear_warning["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Clear Warning Command. Clearing All Chronicle Warnings."
@@ -261,7 +261,7 @@ async def on_message(message):
                 await lib.warning.clearWarnings(client, message)
 
             #Create a New Channel Command
-            elif (args[1] == cmd.create_channel):
+            elif (args[1] == cmd.create_channel["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Create Channel Command. Creating New Chronicler Channel."
@@ -270,7 +270,7 @@ async def on_message(message):
                     client, message, createNew=True)
 
             #Rename Channel Command
-            elif (args[1] == cmd.rename_channel):
+            elif (args[1] == cmd.rename_channel["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Rename Channel Command. Renaming Chronicler Channel in Database. To Rename in Discord, Edit the Channel Settings."
@@ -278,14 +278,14 @@ async def on_message(message):
                 lib.channel.changeName(client, message.channel, message)
 
             #Ignore Posted Message Command
-            elif (args[1] == cmd.ignore_message):
+            elif (args[1] == cmd.ignore_message["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Ignore Command. Ignoring Message.")
                 await lib.ignore.sendIgnoreReaction(client, message)
 
             #Add User to Ignore List Command
-            elif (args[1] == cmd.ignore_users):
+            elif (args[1] == cmd.ignore_users["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Add Ignore Users Command. Adding Users to Ignore List."
@@ -293,7 +293,7 @@ async def on_message(message):
                 await lib.ignore.addUserToIgnoreList(client, message)
 
             #Remove Users from Ignored List Command
-            elif (args[1] == cmd.remove_ignored_users):
+            elif (args[1] == cmd.remove_ignored_users["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Remove Ignored Users Command. Removing Users from Ignore List."
@@ -301,20 +301,20 @@ async def on_message(message):
                 await lib.ignore.removeIgnoredUsers(client, message)
 
             #Post Link to Chronicle Command
-            elif (args[1] == cmd.story_link):
+            elif (args[1] == cmd.story_link["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Get Story Link Command. Getting Story Link.")
                 await lib.link.getChronicle(client, message)
 
             #Blacklist Channel Command
-            elif (args[1] == cmd.blacklist_channel):
+            elif (args[1] == cmd.blacklist_channel["command_name"]):
                 await lib.message.edit(client, progressMessage,
                                        "Found Blacklist Channel Command.")
                 await lib.blacklist.blacklistChronicle(client, message)
 
             #Show Channel General Stats Command
-            elif (args[1] == cmd.stats_general):
+            elif (args[1] == cmd.stats_general["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found General Stats Command. Getting Chronicle's General Stats."
@@ -322,7 +322,7 @@ async def on_message(message):
                 await lib.stats.displayChannelStats(client, message)
 
             #Show Channel's Keywords Command
-            elif (args[1] == cmd.stats_keywords):
+            elif (args[1] == cmd.stats_keywords["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Get Keywords Command. Getting Chronicle's Keywords."
@@ -330,14 +330,14 @@ async def on_message(message):
                 await lib.stats.displayKeywords(client, message)
 
             #Show Channel's Symbols Command
-            elif (args[1] == cmd.stats_symbols):
+            elif (args[1] == cmd.stats_symbols["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Get Symbols Command. Getting Chronicle's Symbols.")
                 await lib.stats.displaySymbols(client, message)
 
             #Show All Stats for Channel
-            elif (args[1] == cmd.stats_all):
+            elif (args[1] == cmd.stats_all["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Get All Stats Command. Getting All of the Chronicle's Stats."
@@ -345,7 +345,7 @@ async def on_message(message):
                 await lib.stats.displayAllStats(client, message)
 
             #Add a Channel to Database Command
-            elif (args[1] == cmd.whitelist_channel):
+            elif (args[1] == cmd.whitelist_channel["command_name"]):
                 await lib.message.edit(
                     client, progressMessage,
                     "Found Whitelist Channel Command. Whitelisting This Channel."

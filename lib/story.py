@@ -116,18 +116,7 @@ def editChronicle(client, message):
         #0 = entry_id
         #1 = message_id
 				if row[1] == str(message.id):
-						lib.db.queryDatabase(
-                "UPDATE {id}_contents SET entry_original=\"{new}\" WHERE entry_id={entry_id};"
-                .format(
-                    id=str(message.channel.id),
-                    new=message.content,
-                    entry_id=row[0]),
-                client,
-                message.channel,
-                connection=connection,
-                commit=False,
-                closeConn=False)
-
+						original_content = message.content
 						editted_content = message.content
 						
 						word_list = lib.keywords.getKeywords(client, message.channel)
@@ -145,13 +134,24 @@ def editChronicle(client, message):
 								editted_content = lib.symbol.pluckSymbol(editted_content, symbol[0], symbol[1])
 
 						editted_content = lib.symbol.replaceMarkdown(editted_content)
+						
+						#Handle Curly Quotes
+						original_content = original_content.replace('“','"').replace('”','"')
+						original_content = original_content.replace("‘","'").replace("’","'")
+						editted_content = editted_content.replace('“','"').replace('”','"')
+						editted_content = editted_content.replace("‘","'").replace("’","'")
+				
+				    #Keep Any Quotes in the Message
+						original_content = original_content.replace("'", "\\'")
+						editted_content = editted_content.replace("'", "\\'")
 
 						is_pinned = message.pinned
 
 						lib.db.queryDatabase(
-                "UPDATE {id}_contents SET entry_editted=\"{new}\", is_pinned={pinned} WHERE entry_id={entry_id};"
+                "UPDATE {id}_contents SET entry_original=\"{original}\", entry_editted=\"{new}\", is_pinned={pinned} WHERE entry_id={entry_id};"
                 .format(
                     id=str(message.channel.id),
+										original=original_content,
                     new=editted_content,
 										pinned=str(is_pinned).upper(),
                     entry_id=row[0]),
