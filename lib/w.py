@@ -20,16 +20,12 @@ async def showWelcome(client, message):
     )
 		
 		welcomeString.append(
-        'To get started, I suggest use the \'Create Channel\' command to create a Chronicler channel with pre-set settings. This will add the channel to The Chronicler\'s database and allow it to start recording the channel. The Chronicler will not record any channel that is not in its database. If you have a channel you wish to add to the database, used the \'Whitelist\' command to add the channel into the database.'
+        'To get started, we suggest using the \'Create Channel\' command to create a Chronicler channel with pre-set settings. This will add the channel to The Chronicler\'s database and allow it to start recording the channel. The Chronicler will not record any channel that is not in its database. If you have a channel you wish to add to the database, used the \'Whitelist\' command to add the channel into the database.'
     )
 		
 		welcomeString.append(
-        'Note, though, that The Chronicler can only record messages as they are sent, or edit messages that are already in the database. In order to catch special cases, such as recording previous messages or editing messages not in the database, use the \'Rewrite\' command to have The Chronicler rewrite the Chronicle as it is when the command is sent.'
-    )
-    
-		welcomeString.append(
-        'View the Help Menu (!c help) for more useful commands.\n\nHappy Chronicling!'
+        'Note, though, that The Chronicler can only record messages as they are sent, or edit messages that are already in the database. In order to catch special cases, such as recording previous messages or editing messages not in the database, use the \'Rewrite\' command to have The Chronicler rewrite the Chronicle as it is when the command is sent. \n\nView the Help Menu (!c help) for more useful commands.\n\nHappy Chronicling!'
     )
 		
 		for string in welcomeString:
-				await lib.message.send(message.channel, string, delete=False)
+				await lib.message.send(client, message.channel, string, delete=False)

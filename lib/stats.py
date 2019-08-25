@@ -25,9 +25,11 @@ async def displayChannelStats(client, message):
         commit=False,
         closeConn=True)
 				
+		channel_info = retval[0]
+		
 		if exists == False:
 				await lib.reaction.reactThumbsDown(client, message)
-				await lib.message.send(
+				await lib.message.send(client, 
             message.channel,
             "The Chronicler could not find the table. Please immediately either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue adding the following: ERROR 500: displayChannelStatus() QUERY: SELECT * FROM chronicles_info WHERE channel_id = {id}"
             .format(id=str(message.channel.id)), delete=False)
@@ -35,16 +37,18 @@ async def displayChannelStats(client, message):
     
 		else:
 				if rowCount == 0:
-						await lib.message.send(
+						await lib.message.send(client, 
                 message.channel,
-                "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?"
+                "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?",
+								feedback=True
             )
 						
 				else:
-						if retval[2] == True:
-								await lib.message.send(
+						if channel_info[2] == True:
+								await lib.message.send(client, 
                     message.channel,
-                    "This channel has been blacklisted. You can no longer get its stats."
+                    "This channel has been blacklisted. You can no longer get its stats.",
+										feedback=True
                 )
 								
 						else:
@@ -62,21 +66,54 @@ async def displayChannelStats(client, message):
 								word_num = 0
 								
 								for row in contentData:
-										char_num += row[2]
-										word_num += row[3]
+										char_num += row[4]
+										word_num += row[5]
+
+								has_warning_str = ""
+								warning_list = ""
+								closed_str = ""
+								privacy_str = ""
+								nsfw_str = ""
+
+								if(channel_info[8] == False):
+										has_warning_str = "False"
+								else:
+										has_warning_str = "True"
+
+								if(channel_info[9] == ""):
+										warning_list = "No Warnings Listed"
+								else:
+										warning_list = channel_info[9]
+
+								if(channel_info[4] == False):
+										closed_str = "False"
+								else:
+										closed_str = "True"
+
+								if(channel_info[3] == "False"):
+										privacy_str = "False"
+								else:
+										privacy_str = "True"
 										
+								if(channel_info[5] == "False"):
+										nsfw_str = "False"
+								else:
+										nsfw_str = "True"
+
 								messageStr = ('Stats for ' + message.channel.name + '\n\n'
-                              '\tIs Closed = ' + str(retval[4]) + '\n'
-                              '\tIs Private = ' + str(retval[3]) + '\n'
-                              '\tChannel ID = ' + str(retval[1]) + '\n'
-                              '\tChannel Creator = ' + str(retval[6]) + '\n'
-                              '\tHas Warnings = ' + str(retval[7]) + '\n'
-                              '\tWarning List = ' + str(retval[8]) + '\n'
-                              '\tDate Last Modified = ' + str(retval[9]) + '\n'
+															'\tChannel ID = ' + str(channel_info[1]) + '\n'
+															'\tChannel Name = ' + str(channel_info[6]) + '\n'
+                              '\tChannel Creator = ' + str(channel_info[7]) + '\n'
+                              '\tIs Closed = ' + str(closed_str) + '\n'
+                              '\tIs Private = ' + str(privacy_str) + '\n'
+															'\tIs NSFW = ' + str(nsfw_str) + '\n'
+                              '\tHas Warnings = ' + str(has_warning_str) + '\n'
+                              '\tWarning List = ' + str(warning_list) + '\n'
+                              '\tDate Last Modified = ' + str(channel_info[10]) + '\n'
                               '\tCharacter Count = ' + str(char_num) + '\n'
                               '\tWord Count = ' + str(word_num))
 															
-								await lib.message.send(message.channel, messageStr,delete=False)
+								await lib.message.send(client, message.channel, messageStr,delete=False)
 								await lib.reaction.reactThumbsUp(client, message)
 
 
@@ -97,19 +134,22 @@ async def displayKeywords(client, message):
 		word_list = lib.keywords.getKeywords(client, message.channel)
 		
 		i = 0
-		
-		for word in word_list:
-				strToAdd = "\t* " + word[0] + " | " + word[1] + "\n"
-				
-				if (len(message_list[i]) + len(strToAdd) < 2000):
-						message_list[i] += strToAdd
+
+		if(len(word_list) == 0):
+				message_list[i] += "\tNo Keywords and Replacements"
+		else:
+				for word in word_list:
+						strToAdd = "\t* " + word[0] + " | " + word[1] + "\n"
 						
-				elif (len(message_list[i]) + len(strToAdd) > 2000):
-						message_list.add(strToAdd)
-						i += 1
+						if (len(message_list[i]) + len(strToAdd) < 2000):
+								message_list[i] += strToAdd
+								
+						elif (len(message_list[i]) + len(strToAdd) > 2000):
+								message_list.add(strToAdd)
+								i += 1
 						
 		for index in message_list:
-				await lib.message.send(message.channel, message_list[index], delete=False)
+				await lib.message.send(client, message.channel, message_list[index], delete=False)
 				
 		await lib.reaction.reactThumbsUp(client, message)
 
@@ -132,6 +172,9 @@ async def displaySymbols(client, message):
 		symbol_list = lib.symbol.getSymbols(client, message.channel)
 		
 		i = 0
+
+		if(len(symbol_list) == 0):
+				message_list[0] += "\tNo Symbol Starts and Ends"
 		
 		for symbol in symbol_list:
 				strToAdd = "\t* " + symbol[0] + " | " + symbol[1] + "\n"
@@ -144,7 +187,7 @@ async def displaySymbols(client, message):
 						i += 1
 						
 		for index in message_list:
-				await lib.message.send(message.channel, message_list[index], delete=False)
+				await lib.message.send(client, message.channel, message_list[index], delete=False)
 				
 		await lib.reaction.reactThumbsUp(client, message)
 

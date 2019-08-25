@@ -15,8 +15,7 @@ async def setWarnings(client, message):
 						The Message That Held the Command
 		"""
 
-    value = message.content.replace('' + cmd.prefix + ' ' + cmd.set_warning,
-                                    '')
+    value = message.content.replace(cmd.set_warning["command"], '')
 
     #Connect to Database
     conn = lib.db.connectToDatabase()
@@ -56,10 +55,9 @@ async def setWarnings(client, message):
         closeConn=True)
 
     await lib.reaction.reactThumbsUp(client, message)
-
-
+		
 async def addWarning(client, message):
-    """
+		"""
 		Functions That Adds a Warning to the Database
 
 		Parameters:
@@ -69,14 +67,17 @@ async def addWarning(client, message):
 				message (discord.Message)
 						The Message That Held the Command
 		"""
+		
+		value = message.content.replace(cmd.add_warning["command"], '')
 
-    value = message.content.replace('' + cmd.prefix + ' ' + cmd.add_warning,
-                                    '')
+		print(value)
+		print(message.content.replace
+		(cmd.add_warning["command"], ''))
 
-    #Connect to Database
-    conn = lib.db.connectToDatabase()
-
-    rowCount, retval, exists = lib.db.queryDatabase(
+		#Connect to Database
+		conn = lib.db.connectToDatabase()
+		
+		rowCount, retval, exists = lib.db.queryDatabase(
         "SELECT * FROM chronicles_info WHERE channel_id=\"{id}\"".format(
             id=str(message.channel.id)),
         client,
@@ -87,17 +88,20 @@ async def addWarning(client, message):
         commit=False,
         getResult=True,
         closeConn=False)
-
-    addition = ''
-
-    # 8 = Warning List
-    if retval[8].endswith(',') or retval[8] == '':
-        addition = value.strip()
-
-    else:
-        addition = ', ' + value.strip()
-
-    lib.db.queryDatabase(
+				
+		addition = ''
+		
+		channel_info = retval[0]
+		
+		# 9 = Warning List
+		if channel_info[9].endswith(', ') or channel_info[9] == '':
+				addition = value.strip()
+		elif channel_info[9].endswith(','):
+				addition = ' ' + value.strip()
+		else:
+				addition = ', ' + value.strip()
+				
+		lib.db.queryDatabase(
         "UPDATE chronicles_info SET has_warnings=TRUE WHERE channel_id=\"{id}\""
         .format(id=str(message.channel.id)),
         client,
@@ -106,8 +110,8 @@ async def addWarning(client, message):
         checkExists=False,
         commit=False,
         closeConn=False)
-
-    lib.db.queryDatabase(
+				
+		lib.db.queryDatabase(
         "UPDATE chronicles_info SET warning_list=CONCAT(IFNULL(warning_list, \"\"), \"{add}\")"
         .format(add=addition.strip()),
         client,
@@ -116,8 +120,8 @@ async def addWarning(client, message):
         checkExists=False,
         commit=True,
         closeConn=True)
-
-    await lib.reaction.reactThumbsUp(client, message)
+				
+		await lib.reaction.reactThumbsUp(client, message)
 
 
 async def removeWarning(client, message):
@@ -132,7 +136,7 @@ async def removeWarning(client, message):
 						The Message That Held the Command
 		"""
 		
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_warning + ' ', '')
+		value = message.content.replace(cmd.remove_warning["command"] + ' ', '')
 
     #Connect to Database
 		conn = lib.db.connectToDatabase()
@@ -148,8 +152,10 @@ async def removeWarning(client, message):
         commit=False,
         getResult=True,
         closeConn=False)
+
+		channel_info = retval[0]
 				
-		warningList = retval[8]
+		warningList = channel_info[9]
 		index = warningList.find(value)
 		
 		if index != -1:
@@ -163,13 +169,13 @@ async def removeWarning(client, message):
                 'ERROR: Internal Error with Removing Warning.')
 						return
 						
-				if warningList[endOfWord] == ',' and warningList[index - 2] != ',':
+				if warningList[endOfWord + 1] == ',' and warningList[index - 2] != ',':
 						finalList = warningList.replace((value + ', '), '')
 				
-				elif warningList[endOfWord] != ',' and warningList[index - 2] == ',':
+				elif warningList[endOfWord + 1] != ',' and warningList[index - 2] == ',':
 						finalList = warningList.replace((', ' + value), '')
 				
-				elif warningList[endOfWord] == ',' and warningList[index - 2] == ',':
+				elif warningList[endOfWord + 1] == ',' and warningList[index - 2] == ',':
 						finalList = warningList.replace((', ' + value + ', '), '')
         
 				else:
@@ -210,9 +216,10 @@ async def removeWarning(client, message):
 				await lib.reaction.reactThumbsUp(client, message)
 		
 		else:
-				await client.sendMessage(
+				await lib.message.send(client,
             message.channel,
-            "The Chronicler did not find the warning you wish to remove. Are you sure you spelled it right?"
+            "The Chronicler did not find the warning you wish to remove. Are you sure you spelled it right?",
+						feedback=True
         )
 
 

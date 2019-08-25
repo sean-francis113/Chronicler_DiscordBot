@@ -65,9 +65,9 @@ async def createChroniclerChannel(client, message, createNew=True):
 		
 		#Parse out options, if any
 		channelOptionsStr = message.content.replace(
-        '' + cmd.prefix + ' ' + cmd.create_channel, '')
+        cmd.create_channel["command"], '')
 		channelOptionsStr = channelOptionsStr.replace(
-        '' + cmd.prefix + ' ' + cmd.whitelist_channel, '')
+        cmd.whitelist_channel["command"], '')
 		channelOptionsStr = channelOptionsStr.strip()
 
 		#Array of Channel Options Provided by the User
@@ -189,8 +189,9 @@ async def createChroniclerChannel(client, message, createNew=True):
 
 		#Otherwise		
 		else:
+				channelName = message.channel.name
 				chroniclerChannel = message.channel
-				chroniclerChannel.edit(nsfw=isNSFW)
+				await chroniclerChannel.edit(nsfw=isNSFW)
 
 		#Set Channel Permissions
 		await chroniclerChannel.set_permissions(message.channel.guild.default_role, overwrite=everyone_perms)
@@ -306,7 +307,7 @@ async def createChroniclerChannel(client, message, createNew=True):
 				conn.commit()
 
 		#Send Welcome Message
-		openingMessage = await lib.message.send(chroniclerChannel, "Welcome to your new channel!", delete=False)
+		openingMessage = await lib.message.send(client, chroniclerChannel, "Welcome to your new channel!", delete=False)
 
     #Send Welcome and Help Messages into New Channel
 		if (showWelcomeMessage == True):

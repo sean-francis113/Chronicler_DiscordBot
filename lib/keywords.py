@@ -16,64 +16,47 @@ async def addKeyword(client, message):
 		"""
 
 		#Grab the Keywords and Replacement Strings
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.add_keyword, '')
+		value = message.content.replace(cmd.add_keyword["command"], '')
 		keywordValues = value.split('|')
 		
 		#Connect to Database
 		conn = lib.db.connectToDatabase()
 		
 		#See if We Already Have the Word in the Database
-		rowCount, result, exists =  lib.db.queryDatabase(
-        "SELECT word FROM {id}_keywords WHERE word=\"{word}\"".format(
-            id=str(message.channel.id), word=keywordValues[0].strip()),
-        client,
-        message.channel,
-        connection=conn,
-        checkExists=True,
-        tablename="{id}_keywords".format(id=str(message.channel.id)),
-        getResult=True,
-				closeConn=False)
-				
-		#If the Table Does Not Exist
-		if exists == False:
-				conn.close()
-				return
+		dictionary = lib.db.checkIfDataExists(client, message.channel, "%s_keywords" %(message.channel.id), word=keywordValues[0].strip())
+
+		#If the Word is Not in the Table
+		if (int(dictionary["word"]) == 0):
+				lib.db.queryDatabase(
+						"INSERT INTO {id}_keywords (word,replacement) VALUES (\"{word}\", \"{replacement}\")"
+						.format(
+								id=str(message.channel.id),
+								word=keywordValues[0].strip(),
+								replacement=keywordValues[1].strip()),
+						client,
+						message.channel,
+						connection=conn,
+						checkExists=False,
+						tablename="{id}_keywords".format(id=str(message.channel.id)),
+						commit=True,
+						closeConn=False)
 
 		#Otherwise
 		else:
-				#If the Word is Not in the Table
-				if rowCount == 0:
-						lib.db.queryDatabase(
-                "INSERT INTO {id}_keywords (word,replacement) VALUES (\"{word}\", \"{replacement}\")"
-                .format(
-                    id=str(message.channel.id),
-                    word=keywordValues[0].strip(),
-                    replacement=keywordValues[1].strip()),
-                client,
-                message.channel,
-                connection=conn,
-                checkExists=False,
-                tablename="{id}_keywords".format(id=str(message.channel.id)),
-                commit=True,
-								closeConn=False)
-
-				#Otherwise
-				else:
-						lib.db.queryDatabase(
-                "UPDATE {id}_keywords SET replacement=\"{replacement}\" WHERE word=\"{word}\";"
-                .format(
-                    id=str(message.channel.id),
-                    replacement=keywordValues[1].strip(),
-                    word=keywordValues[0].strip()),
-                client,
-                message.channel,
-                connection=conn,
-                checkExists=False,
-                tablename="{id}_keywords".format(id=str(message.channel.id)),
-                commit=True,
-								closeConn=False)
+				lib.db.queryDatabase(
+						"UPDATE {id}_keywords SET replacement=\"{replacement}\" WHERE word=\"{word}\";"
+						.format(
+								id=str(message.channel.id),
+								replacement=keywordValues[1].strip(),
+								word=keywordValues[0].strip()),
+						client,
+						message.channel,
+						connection=conn,
+						checkExists=False,
+						tablename="{id}_keywords".format(id=str(message.channel.id)),
+						commit=True,
+						closeConn=False)
 		
-		conn.close()
 		await lib.reaction.reactThumbsUp(client, message)
 
 
@@ -90,7 +73,7 @@ async def removeKeyword(client, message):
 		"""
 
 		#Grab the Keyword to Remove From Message
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_keyword, '')
+		value = message.content.replace(cmd.remove_keyword["command"], '')
 
 		#Connect to Database
 		conn = lib.db.connectToDatabase()
@@ -127,7 +110,8 @@ async def removeKeyword(client, message):
 						await lib.reaction.reactThumbsDown(client, message)
 						await lib.message.send(
                 message.channel,
-                "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly? If you are, make sure it is a keyword that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue.", delete=False
+                "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly? If you are, make sure it is a keyword that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue.", delete=False,
+								feedback=True
             )
 						
 				conn.close()
@@ -202,3 +186,11 @@ def replaceKeyword(string, keyword, replacement):
     #If We Found Nothing, Return the String Untouched
 		else:
 				return string
+
+async def clearList(client, message):
+		lib.db.queryDatabase(
+                "DELETE FROM {id}_keywords".format(
+                    id=str(message.channel.id)),
+                client,
+                message.channel,
+                checkExists=False, getResult=False, commit=True)

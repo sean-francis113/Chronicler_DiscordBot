@@ -25,7 +25,7 @@ async def closeStory(client, message):
         commit=True,
         closeConn=True)
 		
-		await lib.reaction.reactThumbsUp(message, client)
+		await lib.reaction.reactThumbsUp(client, message)
 
 
 async def openStory(client, message):
@@ -50,8 +50,7 @@ async def openStory(client, message):
         commit=True,
         closeConn=True)
 
-		await lib.db.updateModifiedTime(client, message.channel)
-		await lib.reaction.reactThumbsUp(message, client)
+		await lib.reaction.reactThumbsUp(client, message)
 
 
 def deleteChronicle(client, messageID, channelID):
@@ -71,11 +70,12 @@ def deleteChronicle(client, messageID, channelID):
 		conn = lib.db.connectToDatabase()
 		cursor = conn.cursor()
 
-		exists = lib.db.checkIfTableExists(cursor, "{id}_contents")
+		exists = lib.db.checkIfTableExists(cursor, "%s_contents" %(channelID))
 
 		if exists == False:
 				return
 
+		cursor = conn.cursor()
 		cursor.execute("DELETE FROM {channel_id}_contents WHERE message_id={message_id}".format(channel_id=str(channelID), message_id=str(messageID)))
 
 		conn.commit()

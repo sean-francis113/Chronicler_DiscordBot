@@ -1,8 +1,7 @@
 import asyncio
 
-
-async def send(channel, messageStr, ignoreStyle=False, delete=True, time=5.0):
-    """
+async def send(client, channel, messageStr, ignoreStyle=False, feedback=False, delete=True, time=5.0):
+		"""
 		Send a Message to the Specified Channel, Formatted Specificially for The Chronicler's Messages
 
 		Parameters:
@@ -18,32 +17,37 @@ async def send(channel, messageStr, ignoreStyle=False, delete=True, time=5.0):
 				time (float, OPTIONAL)
 						How Long to Wait Before Deleting the Message, if delete is True
 		"""
+		
+		#settings = lib.settings.checkSettings(client, channel)
 
-    #The Final String to Be the Message's Content
-    finalStr = ""
+		#if (feedback == True and (settings[0][1] == "Full" or settings[0][1] == "Messages")) or feedback == False:
+		#The Final String to Be the Message's Content
+		finalStr = ""
 
-    #If We Are Not Ignoring Formatting
-    if ignoreStyle == False:
-        finalStr = "```" + messageStr + "```"
+		#If We Are Not Ignoring Formatting
+		if ignoreStyle == False:
+				finalStr = "```" + messageStr + "```"
 
-    #Otherwise
-    else:
-        finalStr = messageStr
+		#Otherwise
+		else:
+				finalStr = messageStr
 
-    #If the Message Will be Deleted
-    if delete == True:
-        message = await channel.send(finalStr, delete_after=time)
+		#If the Message Will be Deleted
+		if delete == True:
+				message = await channel.send(finalStr, delete_after=time)
 
-    #Otherwise
-    else:
-        message = await channel.send(finalStr)
+		#Otherwise
+		else:
+				message = await channel.send(finalStr)
 
-    #Return the Message
-    return message
+		#Return the Message
+		return message
+		#else:
+				#return None
 
 
-async def edit(client, message, newStr):
-    """
+async def edit(client, message, newStr, feedback=False):
+		"""
 		Function That Edits the Provided Message.
 
 		Parameters:
@@ -56,12 +60,20 @@ async def edit(client, message, newStr):
 						The Content of the Editted Message
 		"""
 
-    finalStr = "```" + newStr + "```"
-    await message.edit(content=finalStr)
+		if message == None:
+				return None
+				
+		#settings = lib.settings.checkSettings(client, message.channel)
+
+		#if (feedback == True and (settings[0][1] == "Full" or settings[0][1] == "Messages")) or feedback == False:
+		finalStr = "```" + newStr + "```"
+		await message.edit(content=finalStr)
+		#else:
+				#return None
 
 
 async def delete(client, message):
-    """
+		"""
 		Delete the Provided Message
 
 		Parameters:
@@ -71,8 +83,11 @@ async def delete(client, message):
 				message (discord.Message)
 						The Message to Delete
 		"""
-
-    await message.delete()
+		
+		try:
+				await message.delete()
+		except:
+				return
 
 
 async def waitThenDelete(client, message, time=5.0):
