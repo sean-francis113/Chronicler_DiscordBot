@@ -16,7 +16,7 @@ async def showHelp(client, message):
 
 		value = message.content.replace(cmd.show_help["command"], "").strip()
 
-		if value == "":
+		if value == "" or message.content.find(cmd.show_help["command"]) == -1:
 				helpStr = ["Welcome to The Chronicler Help!\n\nBelow is a list of the commands that The Chronicler can read and understand. If you wish to learn more about a specific command, type the help command, followed by the command name that you wish to know about (for example: " + (cmd.show_help["command"]) + " " + (cmd.create_channel["command_name"]) + ").\n\nIf you wish to learn more about how to format text such as making text bold or italicized, you can find that information here: https://support.discordapp.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-\n\n"]
 
 				i = 0

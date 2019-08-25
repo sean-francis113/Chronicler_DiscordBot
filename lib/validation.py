@@ -18,6 +18,9 @@ def validateUser(client, message):
 				
 		dictionary = lib.db.checkIfDataExists(client, message.channel, "%s_ignoredUsers" %(message.channel.id), name=message.author.name, id=message.author.id)
 
+		if dictionary is None:
+				return True
+
 		if (int(dictionary["name"]) > 0 or int(dictionary["id"]) > 0):
 				return False
 		else:
