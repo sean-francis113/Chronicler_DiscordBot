@@ -42,7 +42,7 @@ def changeName(client, channel, message):
 		"""
 
 		#Grab the Value of the Command
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.rename_channel + ' ', '').strip()
+		value = message.content.replace(cmd.rename_channel["command"], '').strip()
 
 		#Update the Channel in the Database
 		lib.db.queryDatabase("UPDATE chronicles_info SET channel_name=\"{name}\" WHERE channel_id={id};". format(

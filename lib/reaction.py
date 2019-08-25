@@ -2,7 +2,7 @@ import asyncio
 
 
 async def reactThumbsUp(client, message):
-    """
+		"""
 		Function That Reacts to the Provided Message With a Thumbs Up
 
 		Parameters:
@@ -12,13 +12,16 @@ async def reactThumbsUp(client, message):
 				message (discord.Message)
 						The Message to React To
 		"""
+		
+		#settings = lib.settings.checkSettings(client, message.channel)
 
-    await clearAll(client, message)
-    await message.add_reaction("\U0001F44D")
+		#if settings[0][1] == "Full" or settings[0][1] == "Reactions":
+		await clearAll(client, message)
+		await message.add_reaction("\U0001F44D")
 
 
 async def reactThumbsDown(client, message):
-    """
+		"""
 		Function That Reacts to the Provided Message With a Thumbs Down
 
 		Parameters:
@@ -28,13 +31,16 @@ async def reactThumbsDown(client, message):
 				message (discord.Message)
 						The Message to React To
 		"""
+		
+		#settings = lib.settings.checkSettings(client, message.channel)
 
-    await clearAll(client, message)
-    await message.add_reaction("\U0001F44E")
+		#if settings[0][1] == "Full" or settings[0][1] == "Reactions":
+		await clearAll(client, message)
+		await message.add_reaction("\U0001F44E")
 
 
 async def reactWrench(client, message):
-    """
+		"""
 		Function That Reacts to the Provided Message With a Wrench
 
 		Parameters:
@@ -44,13 +50,16 @@ async def reactWrench(client, message):
 				message (discord.Message)
 						The Message to React To
 		"""
+		
+		#settings = lib.settings.checkSettings(client, message.channel)
 
-    await clearAll(client, message)
-    await message.add_reaction("\U0001F527")
+		#if settings[0][1] == "Full" or settings[0][1] == "Reactions":
+		await clearAll(client, message)
+		await message.add_reaction("\U0001F527")
 
 
 async def clearAll(client, message):
-    """
+		"""
 		Function That Clears All Chronicler Reactions From the Provided Message
 
 		Parameters:
@@ -60,10 +69,13 @@ async def clearAll(client, message):
 				message (discord.Message)
 						The Message to React To
 		"""
-
-    await message.remove_reaction("\U0001F44D", client.user)
-    await message.remove_reaction("\U0001F527", client.user)
-    await message.remove_reaction("\U0001F44E", client.user)
+		
+		try:
+				await message.remove_reaction("\U0001F44D", client.user)
+				await message.remove_reaction("\U0001F527", client.user)
+				await message.remove_reaction("\U0001F44E", client.user)
+		except:
+				return
 
 
 async def waitThenClearAll(client, message, timeToSleep=5.0):

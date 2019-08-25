@@ -14,55 +14,41 @@ async def addSymbol(client, message):
 						The Message That Held the Command
 		"""
 		
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.add_symbol, '')
+		value = message.content.replace(cmd.add_symbol["command"], '')
 		symbolValues = value.split('|')
 		
 		conn = lib.db.connectToDatabase()
 		
-		rowCount, result, exists = lib.db.queryDatabase(
-        "SELECT start FROM {id}_ignoredSymbols WHERE start=\"{start}\"".format(
-            id=str(message.channel.id), start=symbolValues[0].strip()),
-        client,
-        message.channel,
-        connection=conn,
-        checkExists=True,
-        tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
-        getResult=True,
-        closeConn=False)
-				
-		if exists == False:
-				conn.close()
-				return
-				
+		dictionary = lib.db.checkIfDataExists(client, message.channel, "%s_ignoredSymbols" %(message.channel.id), start=symbolValues[0])
+
+		if (int(dictionary["start"]) == 0):
+				lib.db.queryDatabase(
+						"INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")"
+						.format(
+								id=str(message.channel.id),
+								start=symbolValues[0].strip(),
+								end=symbolValues[1].strip()),
+						client,
+						message.channel,
+						connection=conn,
+						checkExists=False,
+						tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
+						commit=True,
+						closeConn=True)
 		else:
-				if rowCount == 0:
-						lib.db.queryDatabase(
-                "INSERT INTO {id}_ignoredSymbols (start,end) VALUES (\"{start}\", \"{end}\")"
-                .format(
-                    id=str(message.channel.id),
-                    start=symbolValues[0].strip(),
-                    end=symbolValues[1].strip()),
-                client,
-                message.channel,
-                connection=conn,
-                checkExists=False,
-                tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
-                commit=True,
-                closeConn=True)
-				else:
-						lib.db.queryDatabase(
-                "UPDATE {id}_ignoredSymbols SET end=\"{end}\" WHERE start=\"{start}\""
-                .format(
-                    id=str(message.channel.id),
-                    start=symbolValues[0].strip(),
-                    end=symbolValues[1].strip()),
-                client,
-                message.channel,
-                connection=conn,
-                checkExists=False,
-                tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
-                commit=True,
-                closeConn=True)
+				lib.db.queryDatabase(
+						"UPDATE {id}_ignoredSymbols SET end=\"{end}\" WHERE start=\"{start}\""
+						.format(
+								id=str(message.channel.id),
+								start=symbolValues[0].strip(),
+								end=symbolValues[1].strip()),
+						client,
+						message.channel,
+						connection=conn,
+						checkExists=False,
+						tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
+						commit=True,
+						closeConn=True)
 								
 		await lib.reaction.reactThumbsUp(client, message)
 
@@ -79,7 +65,7 @@ async def removeSymbol(client, message):
 						The Message That Held the Command
 		"""
 		
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_symbol, '')
+		value = message.content.replace(cmd.remove_symbol["command"], '')
 
 		conn = lib.db.connectToDatabase()
 		
@@ -113,8 +99,9 @@ async def removeSymbol(client, message):
 						
 				elif rowCount == 0:
 						await lib.reaction.reactThumbsDown(client, message)
-						await lib.message.send(message.channel,
-                "The Chronicler could not find the symbol in its database for this channel."
+						await lib.message.send(client, message.channel,
+                "The Chronicler could not find the symbol in its database for this channel.",
+								feedback=True
             )
 
 def replaceMarkdown(string):
@@ -143,7 +130,7 @@ def replaceMarkdown(string):
 		#Ordered by Symbol Priority
 		spoilerSymbols = [("||", "<span class=\"spoiler\">", "</span>")]
 		codeSymbols = [("```", "<span class=\"multilinecode\">", "</span>"), ("`", "<span class=\"singlelinecode\">", "</span>")]
-		markdownSymbols = [("_***", "<span class=\"italics_bold_underline\">", "</span>"), ("***", "<span class=\"italics_bold\">", "</span>"), ("_**", "<span class=\"bold_underline\">", "</span>"), ("**", "<span class=\"bold\">", "</span>"), ("_*", "<span class=\"italics_underline\">", "</span>"), ("~~", "<span class=\"strikeout\">", "</span>"), ("*", "<span class=\"italics\">", "</span>"), ("_", "<span class=\"underline\">", "</span>")]
+		markdownSymbols = [("__***", "<span class=\"italics_bold_underline\">", "</span>"), ("***", "<span class=\"italics_bold\">", "</span>"), ("__**", "<span class=\"bold_underline\">", "</span>"), ("**", "<span class=\"bold\">", "</span>"), ("__*", "<span class=\"italics_underline\">", "</span>"), ("~~", "<span class=\"strikeout\">", "</span>"), ("*", "<span class=\"italics\">", "</span>"), ("__", "<span class=\"underline\">", "</span>")]
 		
 		spoilerString = string
 		codeString = ""
@@ -290,3 +277,12 @@ def getSymbols(client, channel):
 				for row in retval:
 						symbolList.append((row[0], row[1]))
 				return symbolList
+
+async def clearList(client, message):
+		lib.db.queryDatabase(
+                "DELETE FROM {id}_keywords".format(
+                    id=str(message.channel.id)),
+                client,
+                message.channel, checkExists=False,
+                commit=False,
+								closeConn=True)

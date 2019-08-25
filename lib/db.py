@@ -5,6 +5,7 @@ import pymysql.err
 import lib.error
 import lib.log
 import datetime
+from inspect import signature
 
 
 def connectToDatabase():
@@ -191,6 +192,32 @@ def checkIfTableExists(cursor, tablename):
         cursor.close()
         return False
 
+#Check to See if Provided Data Exists. Data Keys Must Be Data Column Name, Their Values the Data We Are Checking. Returns Dictionary with Each Keyword's RowCount
+def checkIfDataExists(client, channel, tablename, **kwargs):
+		sig = signature(checkIfDataExists)
+
+		#If No Keywords Were Added to Function
+		if(len(sig.parameters) == 3):
+				return
+
+		dictionary = {}
+
+		query = "SELECT * FROM %s WHERE" %(tablename)
+
+		#Look Through Keyword Arguments
+		for key, value in kwargs.items():
+
+				#Format Strings Properly For DB Query
+				if isinstance(value, str):
+						value = "\'%s\'" %(value)
+
+				fullQuery = query + " %s=%s;" %(key, value)
+				
+				rowCount, retval, exists = queryDatabase(fullQuery, client, channel, getResult=True)
+
+				dictionary["%s" %(key)] = "%s" %(rowCount)
+
+		return dictionary
 
 def updateModifiedTime(client, channel):
     """

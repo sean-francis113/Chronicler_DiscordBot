@@ -38,7 +38,7 @@ async def addUserToIgnoreList(client, message):
 		dict_user_keys = ["name", "id"]
 
 		#Grab All of the Users In the Message
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.ignore_users, '')
+		value = message.content.replace(cmd.ignore_users["command"], '')
 		usersFound = value.split('|')
 
 		#Grab All of the Users in the Server to Reference
@@ -63,22 +63,27 @@ async def addUserToIgnoreList(client, message):
 
 		#For Users We've Found and Are Going to Ignore
 		for user in ignoredUsers:
+				dictionary = lib.db.checkIfDataExists(client, message.channel, "%s_ignoredUsers" %(message.channel.id), name=user["name"], id=user["id"])
 
-				#Add User to Database Ignore List
-				lib.db.queryDatabase(
-            "INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES (\"{user_name}\", \"{user_id}\")"
-            .format(
-                channel_id=str(message.channel.id),
-                user_name=user["name"],
-                user_id=user["id"]),
-            client,
-            message.channel,
-            connection=conn,
-            commit=False,
-            checkExists=True,
-            tablename="{channel_id}_ignoredUsers".format(
-                channel_id=str(message.channel.id)),
-            closeConn=False)
+				print(dictionary)
+
+				if(int(dictionary["name"]) == 0 and int(dictionary["id"]) == 0):
+
+						#Add User to Database Ignore List
+						lib.db.queryDatabase(
+								"INSERT INTO {channel_id}_ignoredUsers (name, id) VALUES (\"{user_name}\", \"{user_id}\")"
+								.format(
+										channel_id=str(message.channel.id),
+										user_name=user["name"],
+										user_id=user["id"]),
+								client,
+								message.channel,
+								connection=conn,
+								commit=False,
+								checkExists=True,
+								tablename="{channel_id}_ignoredUsers".format(
+										channel_id=str(message.channel.id)),
+								closeConn=False)
 
 		#Commit to Database Once We Are Done
 		conn.commit()
@@ -103,7 +108,7 @@ async def removeIgnoredUsers(client, message):
 		"""
 
 		# Grab the Users to Remove From Message
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.remove_ignored_users, '')
+		value = message.content.replace(cmd.remove_ignored_users["command"], '')
 		usersFound = value.split('|')
 
 		#Connect to Database
@@ -128,9 +133,10 @@ async def removeIgnoredUsers(client, message):
 
 		#If There Are No Users in the List
 		elif rowCount == 0:
-				await lib.message.send(
+				await lib.message.send(client, 
             message.channel,
-            "The Chronicler could not find any users in your Ignored User List."
+            "The Chronicler could not find any users in your Ignored User List.",
+						feedback=True
         )
 				return
 
@@ -192,3 +198,11 @@ def getIgnoredUsers(client, channel):
 						combination = [row[0], row[1]]
 						userList.append(dict(zip(dict_user_keys, combination)))
 				return userList
+
+async def clearUsers(client, message):
+		lib.db.queryDatabase(
+                    "DELETE FROM {channel_id}_ignoredUsers"
+                    .format(channel_id=str(message.channel.id)),
+                    client,
+                    message.channel,
+                    getResult=False, commit=True)

@@ -4,7 +4,7 @@ import lib.message
 
 
 async def postErrorAsync(client, channel, error):
-    await lib.message.send(channel, error, time=20.0)
+    await lib.message.send(client, channel, error, time=20.0)
 
 
 def postError(client, channel, error):

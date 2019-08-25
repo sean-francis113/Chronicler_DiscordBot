@@ -18,7 +18,7 @@ async def blacklistChronicle(client, message):
 
     #Remove Command From Message
 		value = message.content.replace(
-        '' + cmd.prefix + ' ' + cmd.blacklist_channel, '')
+        cmd.blacklist_channel["command"], '')
 
     #Remove Leading and Ending Whitespace From Message
 		value = value.strip()
@@ -27,9 +27,16 @@ async def blacklistChronicle(client, message):
 		#User Confirmation is Made By Adding the Channel ID at the End of the Command.
 		if value != str(message.channel.id):
 				#Confirm With the Player That They Wish to Blacklist the Channel
-				await lib.message.send(message.channel,
+				await lib.message.send(client, message.channel,
             "Are you sure you wish to Blacklist this channel? If you do, nothing will ever be recorded from this channel and it will not be seen or accessed on the site! If you are sure about it, type !c blacklist {id}"
-            .format(id=str(message.channel.id)), time=25.0)
+            .format(id=str(message.channel.id)), time=25.0, feedback=True)
+
+
+		elif(value != "" and value != str(message.channel.id)):
+				#Confirm With the Player That They Wish to Blacklist the Channel
+				await lib.message.send(client, message.channel,
+            "The provided code is not correct for this channel. If you are sure about blacklisting this channel, type !c blacklist {id}"
+            .format(id=str(message.channel.id)), time=25.0, feedback=True)
 
 		#If This is the Confirmation Command
 		else:

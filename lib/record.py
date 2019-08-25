@@ -124,10 +124,11 @@ async def startRewrite(client,
 		
 		if exists == False:
 				lib.reaction.reactThumbsDown(client, message)
-				lib.message.send(
+				lib.message.send(client,
             message.channel,
             "The Chronicler could not find this channel in it's database. Has this channel been Whitelisted?"
-            .format(id=str(message.channel.id)))
+            .format(id=str(message.channel.id)),
+						feedback=True)
 				return
 				
 		if len(messageArray) == 0 or messageArray == None:
@@ -221,7 +222,8 @@ async def startRewrite(client,
 								checkExists=False,
 								commit=False,
 								closeConn=False)
-				
+		
 		conn.commit()
 		conn.close()
-		lib.db.updateModifiedTime(client, message.channel)
+		await lib.db.updateModifiedTime(client, message.channel)
+		await lib.reaction.reactThumbsUp(client, message)

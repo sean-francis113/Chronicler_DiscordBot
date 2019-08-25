@@ -17,7 +17,7 @@ async def showHelp(client, message):
 		value = message.content.replace(cmd.show_help["command"], "").strip()
 
 		if value == "":
-				helpStr = ["Welcome to The Chronicler Help!\n\nBelow is a list of the commands that The Chronicler can read and understand. If you wish to learn more about a specific command, type the help command, followed by the command name that you wish to know about (for example: " + (cmd.show_help["command"]) + " create_channel).\n\nIf you wish to learn more about how to format text such as making text bold or italicized, you can find that information here: https://support.discordapp.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-\n\n"]
+				helpStr = ["Welcome to The Chronicler Help!\n\nBelow is a list of the commands that The Chronicler can read and understand. If you wish to learn more about a specific command, type the help command, followed by the command name that you wish to know about (for example: " + (cmd.show_help["command"]) + " " + (cmd.create_channel["command_name"]) + ").\n\nIf you wish to learn more about how to format text such as making text bold or italicized, you can find that information here: https://support.discordapp.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-\n\n"]
 
 				i = 0
 				cNum = 0
@@ -44,7 +44,7 @@ async def showHelp(client, message):
 
 				k = 0
 				while k < len(helpStr):
-						await lib.message.send(message.channel, helpStr[k], delete=False)
+						await lib.message.send(client, message.channel, helpStr[k], delete=False)
 						k += 1
 
 
@@ -73,19 +73,19 @@ async def showHelp(client, message):
 												exampleStr += "\t" + example + "\n"
 
 								if len(helpStr + optionStr + exampleStr) <= 2000:
-										await lib.message.send(message.channel, helpStr + optionStr + exampleStr, ignoreStyle=True, delete=False)
+										await lib.message.send(client, message.channel, helpStr + optionStr + exampleStr, ignoreStyle=True, delete=False)
 								elif len(helpStr + optionStr) <= 2000:
-										await lib.message.send(message.channel, helpStr + optionStr, ignoreStyle=True, delete=False)
-										await lib.message.send(message.channel, exampleStr, ignoreStyle=True, delete=False)
+										await lib.message.send(client, message.channel, helpStr + optionStr, ignoreStyle=True, delete=False)
+										await lib.message.send(client, message.channel, exampleStr, ignoreStyle=True, delete=False)
 								elif len(optionStr + exampleStr) <= 2000:
-										await lib.message.send(message.channel, helpStr, ignoreStyle=True, delete=False)
-										await lib.message.send(message.channel, optionStr + exampleStr, ignoreStyle=True, delete=False)
+										await lib.message.send(client, message.channel, helpStr, ignoreStyle=True, delete=False)
+										await lib.message.send(client, message.channel, optionStr + exampleStr, ignoreStyle=True, delete=False)
 								else:
-										await lib.message.send(message.channel, helpStr, ignoreStyle=True, delete=False)
-										await lib.message.send(message.channel, optionStr, ignoreStyle=True, delete=False)
-										await lib.message.send(message.channel, exampleStr, ignoreStyle=True, delete=False)
+										await lib.message.send(client, message.channel, helpStr, ignoreStyle=True, delete=False)
+										await lib.message.send(client, message.channel, optionStr, ignoreStyle=True, delete=False)
+										await lib.message.send(client, message.channel, exampleStr, ignoreStyle=True, delete=False)
 
 								return
 
 				await lib.reaction.reactThumbsDown(client, message)
-				await lib.message.send(message.channel, "We could not find the command that you provided. Type '!c help' for a full list of available commands that The Chronicler can read.")
+				await lib.message.send(client, message.channel, "We could not find the command that you provided. Type '!c help' for a full list of available commands that The Chronicler can read.", feedback=True)

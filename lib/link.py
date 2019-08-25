@@ -26,22 +26,29 @@ async def getChronicle(client, message):
         getResult=True,
         closeConn=True)
 
+		if(retval is None):
+				await lib.message.send(client, message.channel, "We could not find your Chronicle in our database. Has this channel been whitelisted?", feedback=True)
+				return	
+
 		retval = list(retval)[0]
 
 		if rowCount > 0:
 				if retval[2] == False:
-						await lib.message.send(message.channel, "Link to Your Chronicle: ", delete=False)
-						await lib.message.send(message.channel, "{url}/chronicle.php?id={id}&page=1".format(url=os.environ.get("CHRONICLER_WEBSITE_URL"),id=str(message.channel.id)), ignoreStyle=True, delete=False)
+						await lib.message.send(client, message.channel, "Link to Your Chronicle: ", delete=False)
+						await lib.message.send(client, message.channel, "{url}/chronicle.php?id={id}&page=1".format(url=os.environ.get("CHRONICLER_WEBSITE_URL"),id=str(message.channel.id)), ignoreStyle=True, delete=False)
 						await lib.reaction.reactThumbsUp(client, message)
 				elif retval[2] == True:
-						await lib.message.send(
+						await lib.message.send(client, 
                 message.channel,
-                "This Chronicle has been blacklisted. You cannot get its link ever again."
+                "This Chronicle has been blacklisted. You cannot get its link ever again.",
+								feedback=True
             )
 						await lib.reaction.reactThumbsDown(client, message)
 		else:
 				await lib.message.send(
+						client,
             message.channel,
-            "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?"
+            "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?",
+						feedback=True
         )
 				await lib.reaction.reactThumbsDown(client, message)

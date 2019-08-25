@@ -15,7 +15,7 @@ async def setPrivacy(client, message):
 						The Message That Held the Command
 		"""
 		
-		value = message.content.replace('' + cmd.prefix + ' ' + cmd.set_privacy, '')
+		value = message.content.replace(cmd.set_privacy["command"], '')
 		lowerValue = value.lower()
 		
 		conn = lib.db.connectToDatabase()
@@ -44,5 +44,7 @@ async def setPrivacy(client, message):
             tablename="chronicles_info",
             commit=True,
             closeConn=True)
+		else:
+				await lib.message.send(client, message.channel, "Did Not Know Whether to Set Privacy or Not. Please, Please Add Either 'True' or 'False' after '{command}'".format(command=cmd.set_privacy["command"]))
 						
 		await lib.reaction.reactThumbsUp(client, message)

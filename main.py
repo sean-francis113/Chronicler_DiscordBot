@@ -23,6 +23,9 @@ import commandList as cmd
 #Setting the Client
 client = discord.Client()
 
+@client.event
+async def on_ready():
+    await client.change_presence(activity=discord.Activity(name='the story', type=discord.ActivityType.listening))
 
 async def postInvalidComment(message):
     """
@@ -34,10 +37,10 @@ async def postInvalidComment(message):
 						The Message the User Sent.
 		"""
 
-    await lib.message.send(
+    await lib.message.send(client, 
         message.channel,
         "Did not find a valid command. Type '!c help' for a list of valid commands.",
-        time=15.0)
+        time=15.0, feedback=True)
 
 
 @client.event
@@ -125,7 +128,7 @@ async def on_guild_channel_delete(channel):
 
 @client.event
 async def on_message(message):
-    """
+		"""
 		Discord Event Called When a Message is Sent to the Server/Channel.
 		If a Command is Found, Act Based on Command. If Not, Attempt to Record the Message.
 
@@ -136,263 +139,170 @@ async def on_message(message):
 		"""
 
     #Confirm That the Message Actually Has Content to Post to the Database or a Command to Make.
-    if message.content == "":
-        return
+		if message.content == "":
+				return
 
-    #Confirm That the Message Was Sent By Someone Other Than Itself, or Someone Not On the Channel's Ignored User List
-    validUser = lib.validation.validateUser(client, message)
-    is_blacklisted = lib.validation.checkBlacklist(client, message)
+		#settings = lib.settings.checkSettings(client, message.channel)
 
-    #If the Message Author is Valid
-    if validUser is True and is_blacklisted is False:
-        #Show the Player That The Chronicler is Working
-        await lib.reaction.reactWrench(client, message)
+		#if settings[0][2] == False:
 
-        #If a Command Was Typed In
-        if (message.content.startswith(cmd.prefix)):
-            #Start Posting Updates to the Player
-            progressMessage = await lib.message.send(
-                message.channel,
-                "Found Command. Reading Command.",
-                delete=False)
+		async with message.channel.typing():
+				#Confirm That the Message Was Sent By Someone Other Than Itself, or Someone Not On the Channel's Ignored User List
+				validUser = lib.validation.validateUser(client, message)
+				is_blacklisted = lib.validation.checkBlacklist(client, message)
 
-            #Get the Arguments by Splitting on Spaces
-            args = message.content.split(' ')
+		#If the Message Author is Valid
+		if validUser is True and is_blacklisted is False:
+				
+				#If a Command Was Typed In
+				if (message.content.startswith(cmd.prefix)):
 
-            #Show Welcome Command
-            if (args[1] == cmd.show_welcome["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Show Welcome Command. Posting Welcome Message.")
-                await lib.w.showWelcome(client, message)
+						async with message.channel.typing():
 
-            #Show Help Command
-            elif (args[1] == cmd.show_help["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Show Help Command. Posting Help Messages.")
-                await lib.h.showHelp(client, message)
+								#Get the Arguments by Splitting on Spaces
+								args = message.content.split(' ')
+								args[1] = args[1].lower()
 
-            #Rewrite Chronicle Command
-            elif (args[1] == cmd.rewrite_story["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Rewrite Command. Starting Rewrite Process.")
-                await lib.record.startRewrite(client, message, checkCount=100)
+								#Show Welcome Command
+								if (args[1] == cmd.show_welcome["command_name"]):
+										await lib.w.showWelcome(client, message)
 
-            #Set Channel Privacy Command
-            elif (args[1] == cmd.set_privacy["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Set Privacy Command. Setting the New Privacy Setting."
-                )
-                await lib.privacy.setPrivacy(client, message)
+								#Show Help Command
+								elif (args[1] == cmd.show_help["command_name"]):
+										await lib.h.showHelp(client, message)
 
-            #Add a New Keyword Command
-            elif (args[1] == cmd.add_keyword["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Add Keyword Command. Adding Keyword(s).")
-                await lib.keywords.addKeyword(client, message)
+								#Rewrite Chronicle Command
+								elif (args[1] == cmd.rewrite_story["command_name"]):
+										await lib.record.startRewrite(client, message, checkCount=100)
 
-            #Add a New Symbol Command
-            elif (args[1] == cmd.add_symbol["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Add Symbol Command. Adding Symbol(s).")
-                await lib.symbol.addSymbol(client, message)
+								#Set Channel Privacy Command
+								elif (args[1] == cmd.set_privacy["command_name"]):
+										await lib.privacy.setPrivacy(client, message)
 
-            #Remove a Old Symbol Command
-            elif (args[1] == cmd.remove_symbol["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Remove Symbol Command. Removing Symbol(s).")
-                await lib.symbol.removeSymbol(client, message)
+								#Add a New Keyword Command
+								elif (args[1] == cmd.add_keyword["command_name"]):
+										await lib.keywords.addKeyword(client, message)
 
-            #Remove an Old Keyword Command
-            elif (args[1] == cmd.remove_keyword["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Remove Keyword Command. Removing Keyword(s).")
-                await lib.keywords.removeKeyword(client, message)
+								#Add a New Symbol Command
+								elif (args[1] == cmd.add_symbol["command_name"]):
+										await lib.symbol.addSymbol(client, message)
 
-            #Close the Chronicle Command
-            elif (args[1] == cmd.close_story["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Close Story Command. Closing Story.")
-                await lib.story.closeStory(client, message)
+								#Remove a Old Symbol Command
+								elif (args[1] == cmd.remove_symbol["command_name"]):
+										await lib.symbol.removeSymbol(client, message)
 
-            #Reopen the Chronicle Command
-            elif (args[1] == cmd.open_story["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Open Story Command. Opening Story.")
-                await lib.story.openStory(client, message)
+								#Remove an Old Keyword Command
+								elif (args[1] == cmd.remove_keyword["command_name"]):
+										await lib.keywords.removeKeyword(client, message)
 
-            #Set the Chronicle's Warnings Command
-            elif (args[1] == cmd.set_warning["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Set Warning Command. Setting Chronicle Warnings.")
-                await lib.warning.setWarnings(client, message)
+								#Close the Chronicle Command
+								elif (args[1] == cmd.close_story["command_name"]):
+										await lib.story.closeStory(client, message)
 
-            #Add a New Chronicle Warning Command
-            elif (args[1] == cmd.add_warning["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Add Warning Command. Adding Chronicle Warnings.")
-                await lib.warning.addWarning(client, message)
+								#Reopen the Chronicle Command
+								elif (args[1] == cmd.open_story["command_name"]):
+										await lib.story.openStory(client, message)
 
-            #Remove an Old Chronicle Warning Command
-            elif (args[1] == cmd.remove_warning["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Remove Warning Command. Removing Chronicle Warnings."
-                )
-                await lib.warning.removeWarning(client, message)
+								#Set the Chronicle's Warnings Command
+								elif (args[1] == cmd.set_warning["command_name"]):
+										await lib.warning.setWarnings(client, message)
 
-            #Clear All Warnings Command
-            elif (args[1] == cmd.clear_warning["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Clear Warning Command. Clearing All Chronicle Warnings."
-                )
-                await lib.warning.clearWarnings(client, message)
+								#Add a New Chronicle Warning Command
+								elif (args[1] == cmd.add_warning["command_name"]):
+										await lib.warning.addWarning(client, message)
 
-            #Create a New Channel Command
-            elif (args[1] == cmd.create_channel["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Create Channel Command. Creating New Chronicler Channel."
-                )
-                await lib.create.createChroniclerChannel(
-                    client, message, createNew=True)
+								#Remove an Old Chronicle Warning Command
+								elif (args[1] == cmd.remove_warning["command_name"]):
+										await lib.warning.removeWarning(client, message)
 
-            #Rename Channel Command
-            elif (args[1] == cmd.rename_channel["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Rename Channel Command. Renaming Chronicler Channel in Database. To Rename in Discord, Edit the Channel Settings."
-                )
-                lib.channel.changeName(client, message.channel, message)
+								#Clear All Warnings Command
+								elif (args[1] == cmd.clear_warning["command_name"]):
+										await lib.warning.clearWarnings(client, message)
 
-            #Ignore Posted Message Command
-            elif (args[1] == cmd.ignore_message["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Ignore Command. Ignoring Message.")
-                await lib.ignore.sendIgnoreReaction(client, message)
+								#Clear All Ignored Users
+								elif (args[1] == cmd.clear_ignored_users["command_name"]):
+										await lib.ignore.clearUsers(client, message)
 
-            #Add User to Ignore List Command
-            elif (args[1] == cmd.ignore_users["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Add Ignore Users Command. Adding Users to Ignore List."
-                )
-                await lib.ignore.addUserToIgnoreList(client, message)
+								#Clear All Keywords
+								elif (args[1] == cmd.clear_keywords["command_name"]):
+										await lib.keywords.clearList(client, message)
 
-            #Remove Users from Ignored List Command
-            elif (args[1] == cmd.remove_ignored_users["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Remove Ignored Users Command. Removing Users from Ignore List."
-                )
-                await lib.ignore.removeIgnoredUsers(client, message)
+								#Clear All Keywords
+								elif (args[1] == cmd.clear_symbols["command_name"]):
+										await lib.symbol.clearList(client, message)
 
-            #Post Link to Chronicle Command
-            elif (args[1] == cmd.story_link["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Get Story Link Command. Getting Story Link.")
-                await lib.link.getChronicle(client, message)
+								#Create a New Channel Command
+								elif (args[1] == cmd.create_channel["command_name"]):
+										await lib.create.createChroniclerChannel(
+												client, message, createNew=True)
 
-            #Blacklist Channel Command
-            elif (args[1] == cmd.blacklist_channel["command_name"]):
-                await lib.message.edit(client, progressMessage,
-                                       "Found Blacklist Channel Command.")
-                await lib.blacklist.blacklistChronicle(client, message)
+								#Rename Channel Command
+								elif (args[1] == cmd.rename_channel["command_name"]):
+										lib.channel.changeName(client, message.channel, message)
 
-            #Show Channel General Stats Command
-            elif (args[1] == cmd.stats_general["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found General Stats Command. Getting Chronicle's General Stats."
-                )
-                await lib.stats.displayChannelStats(client, message)
+								#Ignore Posted Message Command
+								elif (args[1] == cmd.ignore_message["command_name"]):
+										await lib.ignore.sendIgnoreReaction(client, message)
 
-            #Show Channel's Keywords Command
-            elif (args[1] == cmd.stats_keywords["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Get Keywords Command. Getting Chronicle's Keywords."
-                )
-                await lib.stats.displayKeywords(client, message)
+								#Add User to Ignore List Command
+								elif (args[1] == cmd.ignore_users["command_name"]):
+										await lib.ignore.addUserToIgnoreList(client, message)
 
-            #Show Channel's Symbols Command
-            elif (args[1] == cmd.stats_symbols["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Get Symbols Command. Getting Chronicle's Symbols.")
-                await lib.stats.displaySymbols(client, message)
+								#Remove Users from Ignored List Command
+								elif (args[1] == cmd.remove_ignored_users["command_name"]):
+										await lib.ignore.removeIgnoredUsers(client, message)
 
-            #Show All Stats for Channel
-            elif (args[1] == cmd.stats_all["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Get All Stats Command. Getting All of the Chronicle's Stats."
-                )
-                await lib.stats.displayAllStats(client, message)
+								#Post Link to Chronicle Command
+								elif (args[1] == cmd.story_link["command_name"]):
+										await lib.link.getChronicle(client, message)
 
-            #Add a Channel to Database Command
-            elif (args[1] == cmd.whitelist_channel["command_name"]):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Found Whitelist Channel Command. Whitelisting This Channel."
-                )
-                await lib.create.addChannelToChronicler(
-                    client, message, createNew=False)
+								#Blacklist Channel Command
+								elif (args[1] == cmd.blacklist_channel["command_name"]):
+										await lib.blacklist.blacklistChronicle(client, message)
 
-            #No Valid Command
-            else:
+								#Show Channel General Stats Command
+								elif (args[1] == cmd.stats_general["command_name"]):
+										await lib.stats.displayChannelStats(client, message)
 
-                #Show Player That The Chronicler Was Unsuccessful
-                await lib.reaction.reactThumbsDown(client, message)
+								#Show Channel's Keywords Command
+								elif (args[1] == cmd.stats_keywords["command_name"]):
+										await lib.stats.displayKeywords(client, message)
 
-                #Post the Invalid Command Comment
-                await postInvalidComment(message)
+								#Show Channel's Symbols Command
+								elif (args[1] == cmd.stats_symbols["command_name"]):
+										await lib.stats.displaySymbols(client, message)
 
-            #Wait For a Few Seconds, Then Delete the User's Command
-            await lib.message.waitThenDelete(client, message, time=6.0)
+								#Show All Stats for Channel
+								elif (args[1] == cmd.stats_all["command_name"]):
+										await lib.stats.displayAllStats(client, message)
 
-        #No Command Found
-        else:
+								#Add a Channel to Database Command
+								elif (args[1] == cmd.whitelist_channel["command_name"]):
+										await lib.create.createChroniclerChannel(
+												client, message, createNew=False)
 
-            #Start Posting Update Messages
-            progressMessage = await lib.message.send(
-                message.channel,
-                "Did Not Find a Command. Checking Validation for Posting.",
-                delete=False)
+								#No Valid Command
+								else:
 
-            #Make Sure The Chronicle Can Record
-            if lib.validation.checkIfCanPost(client, message):
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Validation Successful. Posting to Database.")
-                await lib.record.postToDatabase(client, message)
+										#Show Player That The Chronicler Was Unsuccessful
+										await lib.reaction.reactThumbsDown(client, message)
 
-            #Tell the User That Validation Failed
-            else:
-                await lib.message.edit(
-                    client, progressMessage,
-                    "Validation Failed. Is the Channel Closed?")
+										#Post the Invalid Command Comment
+										await postInvalidComment(message)
 
-            #Wait a Few Seconds, Then Clear All Chronicler Reactions From the User's Message
-            await lib.reaction.waitThenClearAll(client, message)
+						if not message.content.startswith(cmd.ignore_message["command"]):
+								await lib.message.waitThenDelete(client, message)
 
-        #Wait a Few Seconds, Then Delete the Progress Message
-        await lib.message.waitThenDelete(client, progressMessage)
+				#No Command Found
+				else:
 
+						async with message.channel.typing():
+
+								#Make Sure The Chronicle Can Record
+								if await lib.validation.checkIfCanPost(client, message):
+										await lib.record.postToDatabase(client, message)
+				
+				await lib.reaction.waitThenClearAll(client, message)
 
 #Keep the Bot Alive
 lib.keep_alive.keep_alive()

@@ -1,0 +1,13 @@
+[tool]
+[tool.poetry]
+authors = ["Your Name <you@example.com>"]
+name = "lib"
+version = "0.0.0"
+[tool.poetry.dependencies]
+asyncio = "==3.4.3"
+"discord.py" = "==1.0.0"
+flask = "*"
+pymysql = "==0.7.2"
+python = "*"
+python-dotenv = "*"
+requests = "==2.21.0"
