@@ -212,6 +212,9 @@ def checkIfDataExists(client, channel, tablename, **kwargs):
 						value = "\'%s\'" %(value)
 
 				fullQuery = query + " %s=%s;" %(key, value)
+
+				if checkIfTableExists(connectToDatabase().cursor(), tablename) == False:
+						return
 				
 				rowCount, retval, exists = queryDatabase(fullQuery, client, channel, getResult=True)
 
