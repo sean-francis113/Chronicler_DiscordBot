@@ -102,7 +102,7 @@ async def on_guild_channel_update(before, after):
 
 @client.event
 async def on_guild_channel_delete(channel):
-    """
+		"""
 		Discord Event Called When a Channel is Deleted
 
 		Parameters:
@@ -110,9 +110,9 @@ async def on_guild_channel_delete(channel):
 				channel (discord.abs.GuildChannel)
 						The Channel Deleted
 		"""
-
-    #Close Channel in the Database
-    lib.db.queryDatabase(
+		
+		#Close Channel in the Database
+		lib.db.queryDatabase(
         "UPDATE chronicles_info SET is_closed = TRUE WHERE channel_id={id};".
         format(id=str(channel.id)),
         client,
@@ -120,10 +120,13 @@ async def on_guild_channel_delete(channel):
         commit=True,
         checkExists=True,
         tablename="chronicles_info")
-
-    if channel != None:
-        #Update the Last Modified Time in the Database
-        await lib.db.updateModifiedTime(client, channel)
+				
+		if channel != None:
+				#Update the Last Modified Time in the Database
+				try:
+						await lib.db.updateModifiedTime(client, channel)
+				except:
+						return
 
 
 @client.event
