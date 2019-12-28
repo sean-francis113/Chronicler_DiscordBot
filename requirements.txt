@@ -1,7 +1,6 @@
-discord.py==1.2.3
+discord.py==1.2.5
 flask
 python-dotenv
 pymysql==0.7.2
 asyncio==3.4.3
 requests==2.21.0
-discord

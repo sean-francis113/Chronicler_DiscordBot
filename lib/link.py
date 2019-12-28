@@ -1,5 +1,6 @@
 import lib.db
 import lib.reaction
+import lib.error
 import os
 
 
@@ -19,9 +20,7 @@ async def getChronicle(client, message):
         "SELECT * FROM chronicles_info WHERE channel_id={id}".
         format(id=str(message.channel.id)),
         client,
-        channel=message.channel,
-        checkExists=True,
-        tablename="chronicles_info",
+        channel=message.channel,tablename="chronicles_info",
         commit=False,
         getResult=True,
         closeConn=True)
@@ -38,17 +37,19 @@ async def getChronicle(client, message):
 						await lib.message.send(client, message.channel, "{url}/chronicle.php?id={id}&page=1".format(url=os.environ.get("CHRONICLER_WEBSITE_URL"),id=str(message.channel.id)), ignoreStyle=True, delete=False)
 						await lib.reaction.reactThumbsUp(client, message)
 				elif retval[2] == True:
-						await lib.message.send(client, 
-                message.channel,
-                "This Chronicle has been blacklisted. You cannot get its link ever again.",
-								feedback=True
-            )
+						#Show Player That The Chronicler Was Unsuccessful
 						await lib.reaction.reactThumbsDown(client, message)
+
+						await lib.error.postError(client,		message.channel,
+                "This Chronicle has been blacklisted. You cannot get its link ever again."
+            )
 		else:
-				await lib.message.send(
+
+				#Show Player That The Chronicler Was Unsuccessful
+				await lib.reaction.reactThumbsDown(client, message)
+
+				await lib.error.postError(
 						client,
             message.channel,
-            "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?",
-						feedback=True
+            "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?"
         )
-				await lib.reaction.reactThumbsDown(client, message)

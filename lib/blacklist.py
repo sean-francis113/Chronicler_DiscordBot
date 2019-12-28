@@ -46,8 +46,7 @@ async def blacklistChronicle(client, message):
             .format(id=str(message.channel.id)),
             client,
             message.channel,
-            checkExists=True,
-            tablename="chronicles_info",
+						tablename="chronicles_info",
             commit=True,
             closeConn=True)
 						

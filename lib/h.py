@@ -87,5 +87,7 @@ async def showHelp(client, message):
 
 								return
 
+				#Show Player That The Chronicler Was Unsuccessful
 				await lib.reaction.reactThumbsDown(client, message)
-				await lib.message.send(client, message.channel, "We could not find the command that you provided. Type '!c help' for a full list of available commands that The Chronicler can read.", feedback=True)
+
+				await lib.error.postError(client, message.channel, "We could not find the command that you provided. Type '!c help' for a full list of available commands that The Chronicler can read.")

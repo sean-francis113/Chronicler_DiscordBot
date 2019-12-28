@@ -15,12 +15,13 @@ def postError(client, channel, error):
 		-----------
 				client (discord.Client)
 						The Chronicler Client
-				channel (discord.TextChannel)
-						The Channel That the Error Will be Posted To
+				message (discord.Message)
+						The Channel to post the error
 				error (string)
 						The Error That Will be Posted
 
 		"""
+
 		loop = asyncio.new_event_loop()
-		yield from postErrorAsync(client, channel, error)
+		yield from postErrorAsync(client, message.channel, error)
 		loop.stop()

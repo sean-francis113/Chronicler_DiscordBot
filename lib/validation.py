@@ -16,11 +16,8 @@ def validateUser(client, message):
 		if str(message.author.id) == str(client.user.id):
 				return False
 				
-		dictionary = lib.db.checkIfDataExists(client, message.channel, "%s_ignoredUsers" %(message.channel.id), name=message.author.name, id=message.author.id)
-
-		if dictionary is None:
-				return True
-
+		dictionary = lib.db.checkIfDataExists(client, message.channel, "%s_ignoredUsers" %(message.channel.id), name=message.author.name, id=str(message.author.id))
+		
 		if (int(dictionary["name"]) > 0 or int(dictionary["id"]) > 0):
 				return False
 		else:
@@ -43,8 +40,7 @@ async def checkIfCanPost(client, message):
         .format(id=str(message.channel.id)),
         client,
         message.channel,
-        checkExists=True,
-        tablename="chronicles_info",
+				tablename="chronicles_info",
         getResult=True,
         closeConn=True)
 		
@@ -85,8 +81,7 @@ def checkBlacklist(client, message):
         format(id=str(message.channel.id)),
         client,
         message.channel,
-        checkExists=True,
-        tablename="chronicles_info",
+				tablename="chronicles_info",
         getResult=True,
         closeConn=True)
 

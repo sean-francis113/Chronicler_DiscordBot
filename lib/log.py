@@ -27,5 +27,5 @@ def logEvent(client, channel, message=None, eType="General", string="", connecti
         client,
         channel,
 				conn=connection,
-        checkExists=False,
+        
         closeConn=close)

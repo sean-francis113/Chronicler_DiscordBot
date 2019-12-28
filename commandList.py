@@ -114,7 +114,7 @@ blacklist_channel = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -132,7 +132,7 @@ rename_channel = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -154,7 +154,7 @@ rewrite_story = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -172,7 +172,7 @@ open_story = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -190,7 +190,7 @@ close_story = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -212,7 +212,7 @@ set_privacy = {
     
 		"options": ["true - Privitizes the story", "false - Publicizes the story"],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "set_privacy" + " true"]
 }
@@ -252,7 +252,7 @@ ignore_users = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "ignore_user" + " Miggnor", prefix + " " + "ignore_user" + " Miggnor | Calli | Billi_Bob"]
 }
@@ -270,7 +270,7 @@ remove_ignored_users = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "pull_ignored_user" + " Miggnor", prefix + " " + "pull_ignored_user" + " Miggnor | Calli | Billi_Bob"]
 }
@@ -288,7 +288,7 @@ clear_ignored_users = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -347,7 +347,7 @@ add_warning = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "add_warning" + " Heavy Language"]
 }
@@ -365,7 +365,7 @@ remove_warning = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "pull_warning" + " Sexual Content"]
 }
@@ -383,7 +383,7 @@ set_warning = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "set_warning" + " Sexual Content, Drug and Alcohol Reference, Violence"]
 }
@@ -401,7 +401,7 @@ clear_warning = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -422,7 +422,7 @@ add_keyword = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "add_keyword" + " dual strike | Baelic swings both of his blades"]
 }
@@ -440,7 +440,7 @@ remove_keyword = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "pull_keyword" + " dual strike"]
 }
@@ -458,7 +458,7 @@ clear_keywords = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -480,7 +480,7 @@ add_symbol = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "add_symbol" + " (( | ]]"]
 }
@@ -498,7 +498,7 @@ remove_symbol = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": [prefix + " " + "pull_symbol" + "(("]
 }
@@ -516,7 +516,7 @@ clear_symbols = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -538,7 +538,7 @@ story_link = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -560,7 +560,7 @@ stats_general = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -578,7 +578,7 @@ stats_keywords = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -596,7 +596,7 @@ stats_symbols = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -614,7 +614,7 @@ stats_all = {
     
 		"options": [],
     
-		"can_post_in": "A channel that has been added to The Chronicler's Database and is not being ignored (see ignore_channel Command).",
+		"can_post_in": "A channel that has been added to The Chronicler's Database.",
     
 		"examples": []
 }
@@ -624,5 +624,5 @@ stats_all = {
 #Complete List of Commands
 
 command_list = [
-    show_welcome, show_help, create_channel, whitelist_channel, blacklist_channel, rename_channel, rewrite_story, open_story, close_story, set_privacy, ignore_message, ignore_users, remove_ignored_users, clear_ignored_users, add_warning, remove_warning, set_warning, clear_warning, add_keyword, remove_keyword, add_symbol, remove_symbol, story_link, stats_general, stats_keywords,
+    show_welcome, show_help, create_channel, whitelist_channel, blacklist_channel, rename_channel, rewrite_story, open_story, close_story, set_privacy, ignore_message, ignore_users, remove_ignored_users, clear_ignored_users, add_warning, remove_warning, set_warning, clear_warning, add_keyword, remove_keyword, clear_keywords, add_symbol, remove_symbol, clear_symbols, story_link, stats_general, stats_keywords,
     stats_symbols, stats_all]
