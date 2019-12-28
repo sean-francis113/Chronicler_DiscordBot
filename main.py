@@ -13,6 +13,7 @@ import lib.link
 import lib.privacy
 import lib.message
 import lib.record
+import lib.settings
 import lib.stats
 import lib.story
 import lib.validation
@@ -26,21 +27,6 @@ client = discord.Client()
 @client.event
 async def on_ready():
     await client.change_presence(activity=discord.Activity(name='the story', type=discord.ActivityType.listening))
-
-async def postInvalidComment(message):
-    """
-		Function That Posts a Message Telling the User They Have Entered an Invalid Command Into The Chronicler.
-
-		Parameters:
-		-----------
-				message (discord.Message)
-						The Message the User Sent.
-		"""
-
-    await lib.message.send(client, 
-        message.channel,
-        "Did not find a valid command. Type '!c help' for a list of valid commands.",
-        time=15.0, feedback=True)
 
 
 @client.event
@@ -83,6 +69,24 @@ async def on_raw_message_edit(payload):
         #Edit the Message in the Database
         lib.story.editChronicle(client, message)
 
+		
+@client.event
+async def on_guild_channel_create(channel):
+		bot_perms = discord.PermissionOverwrite(
+			administrator=True
+		)
+
+		await channel.set_permissions(client.user, overwrite=bot_perms)
+
+	
+@client.event
+async def on_private_channel_create(channel):
+		bot_perms = discord.PermissionOverwrite(
+			administrator=True
+		)
+
+		await channel.set_permissions(client.user, overwrite=bot_perms)
+
 
 @client.event
 async def on_guild_channel_update(before, after):
@@ -117,16 +121,26 @@ async def on_guild_channel_delete(channel):
         format(id=str(channel.id)),
         client,
         channel,
-        commit=True,
-        checkExists=True,
-        tablename="chronicles_info")
-				
-		if channel != None:
-				#Update the Last Modified Time in the Database
-				try:
-						await lib.db.updateModifiedTime(client, channel)
-				except:
-						return
+        commit=True,tablename="chronicles_info")
+
+@client.event
+async def on_private_channel_delete(channel):
+		"""
+		Discord Event Called When a Private Channel is Deleted
+
+		Parameters:
+		-----------
+				channel (discord.abs.GuildChannel)
+						The Channel Deleted
+		"""
+		
+		#Close Channel in the Database
+		lib.db.queryDatabase(
+        "UPDATE chronicles_info SET is_closed = TRUE WHERE channel_id={id};".
+        format(id=str(channel.id)),
+        client,
+        channel,
+        commit=True,tablename="chronicles_info")
 
 
 @client.event
@@ -290,8 +304,8 @@ async def on_message(message):
 										#Show Player That The Chronicler Was Unsuccessful
 										await lib.reaction.reactThumbsDown(client, message)
 
-										#Post the Invalid Command Comment
-										await postInvalidComment(message)
+										#Post Error Message
+										lib.error.postError(client, message.channel, "Did not find a valid command. Type '!c help' for a list of valid commands.")
 
 						if not message.content.startswith(cmd.ignore_message["command"]):
 								await lib.message.waitThenDelete(client, message)

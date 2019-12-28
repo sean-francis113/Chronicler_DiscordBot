@@ -1,4 +1,5 @@
 import asyncio
+import lib.settings
 
 async def send(client, channel, messageStr, ignoreStyle=False, feedback=False, delete=True, time=5.0):
 		"""

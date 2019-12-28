@@ -21,8 +21,7 @@ def updateChannel(client, before, after):
 		), 
 		client,
     before,
-    checkExists=True,
-    tablename="chronicles_info",
+		tablename="chronicles_info",
     commit=True,
     closeConn=True)
 
@@ -51,7 +50,6 @@ def changeName(client, channel, message):
 		), 
 		client,
     channel,
-    checkExists=True,
     tablename="chronicles_info",
     commit=True,
     closeConn=True)

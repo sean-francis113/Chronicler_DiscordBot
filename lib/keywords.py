@@ -36,7 +36,6 @@ async def addKeyword(client, message):
 						client,
 						message.channel,
 						connection=conn,
-						checkExists=False,
 						tablename="{id}_keywords".format(id=str(message.channel.id)),
 						commit=True,
 						closeConn=False)
@@ -52,7 +51,6 @@ async def addKeyword(client, message):
 						client,
 						message.channel,
 						connection=conn,
-						checkExists=False,
 						tablename="{id}_keywords".format(id=str(message.channel.id)),
 						commit=True,
 						closeConn=False)
@@ -85,8 +83,7 @@ async def removeKeyword(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=True,
-        tablename="{id}_keywords".format(id=str(message.channel.id)),
+				tablename="{id}_keywords".format(id=str(message.channel.id)),
         getResult=True,
 				closeConn=False)
 
@@ -102,16 +99,17 @@ async def removeKeyword(client, message):
                 client,
                 message.channel,
                 connection=conn,
-                checkExists=False,
-                commit=True,
+								commit=True,
 								closeConn=False)
 						await lib.reaction.reactThumbsUp(client, message)
 				elif rowCount == 0:
+
+						#Show Player That The Chronicler Was Unsuccessful
 						await lib.reaction.reactThumbsDown(client, message)
-						await lib.message.send(
+
+						await lib.error.postError(
                 message.channel,
-                "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly? If you are, make sure it is a keyword that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue.", delete=False,
-								feedback=True
+                "The Chronicler could not find the keyword in its database for this channel. Did you spell it correctly? If you are, make sure it is a keyword that was added to the Chronicle. If you are still having issues, please either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue."
             )
 						
 				conn.close()
@@ -137,8 +135,7 @@ def getKeywords(client, channel):
         "SELECT word,replacement FROM {id}_keywords".format(id=channel.id),
         client,
         channel,
-        checkExists=True,
-        tablename="{id}_keywords".format(id=channel.id),
+				tablename="{id}_keywords".format(id=channel.id),
         getResult=True,
         closeConn=True)
 				
@@ -193,4 +190,6 @@ async def clearList(client, message):
                     id=str(message.channel.id)),
                 client,
                 message.channel,
-                checkExists=False, getResult=False, commit=True)
+                getResult=False, 
+								tablename="{id}_keywords".format(id=str(message.channel.id)),
+								commit=True)

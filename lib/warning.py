@@ -27,8 +27,7 @@ async def setWarnings(client, message):
             client,
             message.channel,
             connection=conn,
-            checkExists=True,
-            tablename="chronicles_info",
+						tablename="chronicles_info",
             commit=True,
             closeConn=False)
 
@@ -39,8 +38,7 @@ async def setWarnings(client, message):
             client,
             message.channel,
             connection=conn,
-            checkExists=True,
-            tablename="chronicles_info",
+						tablename="chronicles_info",
             commit=True,
             closeConn=False)
 
@@ -50,7 +48,7 @@ async def setWarnings(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=False,
+        tablename="chronicles_info",
         commit=True,
         closeConn=True)
 
@@ -83,8 +81,7 @@ async def addWarning(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=True,
-        tablename="chronicles_info",
+				tablename="chronicles_info",
         commit=False,
         getResult=True,
         closeConn=False)
@@ -107,7 +104,7 @@ async def addWarning(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=False,
+        tablename="chronicles_info",
         commit=False,
         closeConn=False)
 				
@@ -117,7 +114,7 @@ async def addWarning(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=False,
+        tablename="chronicles_info",
         commit=True,
         closeConn=True)
 				
@@ -147,8 +144,7 @@ async def removeWarning(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=True,
-        tablename="chronicles_info",
+				tablename="chronicles_info",
         commit=False,
         getResult=True,
         closeConn=False)
@@ -164,6 +160,9 @@ async def removeWarning(client, message):
 				finalList = ''
 				
 				if endOfWord >= len(warningList):
+						#Show Player That The Chronicler Was Unsuccessful
+						await lib.reaction.reactThumbsDown(client, message)
+
 						lib.error.postError(
                 client, message.channel,
                 'ERROR: Internal Error with Removing Warning.')
@@ -188,7 +187,7 @@ async def removeWarning(client, message):
                 client,
                 message.channel,
                 connection=conn,
-                checkExists=True,
+                tablename="chronicles_info",
                 commit=False,
                 closeConn=False)
         
@@ -199,7 +198,7 @@ async def removeWarning(client, message):
                 client,
                 message.channel,
                 connection=conn,
-                checkExists=True,
+                tablename="chronicles_info",
                 commit=False,
                 closeConn=False)
 								
@@ -209,7 +208,7 @@ async def removeWarning(client, message):
             client,
             message.channel,
             connection=conn,
-            checkExists=False,
+            tablename="chronicles_info",
             commit=True,
             closeConn=True)
 						
@@ -243,8 +242,7 @@ async def clearWarnings(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=True,
-        tablename="chronicles_info",
+				tablename="chronicles_info",
         commit=False,
         closeConn=False)
 				
@@ -254,7 +252,7 @@ async def clearWarnings(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=False,
+        tablename="chronicles_info",
         commit=True,
         closeConn=True)
 				

@@ -27,9 +27,7 @@ async def setPrivacy(client, message):
             .format(id=str(message.channel.id)),
             client,
             message.channel,
-            connection=conn,
-            checkExists=True,
-            tablename="chronicles_info",
+            connection=conn,tablename="chronicles_info",
             commit=True,
             closeConn=True)
 		elif lowerValue.strip() == "false":
@@ -39,9 +37,7 @@ async def setPrivacy(client, message):
             .format(id=str(message.channel.id)),
             client,
             message.channel,
-            connection=conn,
-            checkExists=True,
-            tablename="chronicles_info",
+            connection=conn,tablename="chronicles_info",
             commit=True,
             closeConn=True)
 		else:

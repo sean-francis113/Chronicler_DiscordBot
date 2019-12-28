@@ -19,102 +19,93 @@ async def displayChannelStats(client, message):
             id=str(message.channel.id)),
         client,
         message.channel,
-        checkExists=True,
-        tablename="chronicles_info",
+				tablename="chronicles_info",
         getResult=True,
         commit=False,
         closeConn=True)
 				
 		channel_info = retval[0]
-		
-		if exists == False:
-				await lib.reaction.reactThumbsDown(client, message)
-				await lib.message.send(client, 
-            message.channel,
-            "The Chronicler could not find the table. Please immediately either use our contact form at chronicler.seanmfrancis.net/contact.php or email us at thechroniclerbot@gmail.com detailing your issue adding the following: ERROR 500: displayChannelStatus() QUERY: SELECT * FROM chronicles_info WHERE channel_id = {id}"
-            .format(id=str(message.channel.id)), delete=False)
-				return
     
+		if rowCount == 0:
+				#Show Player That The Chronicler Was Unsuccessful
+				await lib.reaction.reactThumbsDown(client, message)
+
+				lib.error.postError(client, 
+						message.channel,
+						"The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?"
+				)
+				
 		else:
-				if rowCount == 0:
-						await lib.message.send(client, 
-                message.channel,
-                "The Chronicler could not find this channel in its database. Has this channel been created for or added into the database?",
-								feedback=True
-            )
+				if channel_info[2] == True:
+						#Show Player That The Chronicler Was Unsuccessful
+						await lib.reaction.reactThumbsDown(client, message)
+
+						await lib.error.postError(client, 		message.channel,
+								"This channel has been blacklisted. You can no longer get its stats."
+						)
 						
 				else:
-						if channel_info[2] == True:
-								await lib.message.send(client, 
-                    message.channel,
-                    "This channel has been blacklisted. You can no longer get its stats.",
-										feedback=True
-                )
+						rowCount, contentData, exists = lib.db.queryDatabase(
+								"SELECT * FROM {id}_contents".format(
+										id=str(message.channel.id)),
+								client,
+								message.channel,tablename="{id}_contents".format(id=str(message.channel.id)),
+								getResult=True,
+								closeConn=True)
 								
+						char_num = 0
+						word_num = 0
+						
+						for row in contentData:
+								char_num += row[4]
+								word_num += row[5]
+
+						has_warning_str = ""
+						warning_list = ""
+						closed_str = ""
+						privacy_str = ""
+						nsfw_str = ""
+
+						if(channel_info[8] == False):
+								has_warning_str = "False"
 						else:
-								rowCount, contentData, exists = lib.db.queryDatabase(
-                    "SELECT * FROM {id}_contents".format(
-                        id=str(message.channel.id)),
-                    client,
-                    message.channel,
-                    checkExists=True,
-                    tablename="{id}_contents".format(id=str(message.channel.id)),
-                    getResult=True,
-                    closeConn=True)
-										
-								char_num = 0
-								word_num = 0
+								has_warning_str = "True"
+
+						if(channel_info[9] == ""):
+								warning_list = "No Warnings Listed"
+						else:
+								warning_list = channel_info[9]
+
+						if(channel_info[4] == False):
+								closed_str = "False"
+						else:
+								closed_str = "True"
+
+						if(channel_info[3] == "False"):
+								privacy_str = "False"
+						else:
+								privacy_str = "True"
 								
-								for row in contentData:
-										char_num += row[4]
-										word_num += row[5]
+						if(channel_info[5] == "False"):
+								nsfw_str = "False"
+						else:
+								nsfw_str = "True"
 
-								has_warning_str = ""
-								warning_list = ""
-								closed_str = ""
-								privacy_str = ""
-								nsfw_str = ""
-
-								if(channel_info[8] == False):
-										has_warning_str = "False"
-								else:
-										has_warning_str = "True"
-
-								if(channel_info[9] == ""):
-										warning_list = "No Warnings Listed"
-								else:
-										warning_list = channel_info[9]
-
-								if(channel_info[4] == False):
-										closed_str = "False"
-								else:
-										closed_str = "True"
-
-								if(channel_info[3] == "False"):
-										privacy_str = "False"
-								else:
-										privacy_str = "True"
-										
-								if(channel_info[5] == "False"):
-										nsfw_str = "False"
-								else:
-										nsfw_str = "True"
-
-								messageStr = ('Stats for ' + message.channel.name + '\n\n'
-															'\tChannel ID = ' + str(channel_info[1]) + '\n'
-															'\tChannel Name = ' + str(channel_info[6]) + '\n'
-                              '\tChannel Creator = ' + str(channel_info[7]) + '\n'
-                              '\tIs Closed = ' + str(closed_str) + '\n'
-                              '\tIs Private = ' + str(privacy_str) + '\n'
-															'\tIs NSFW = ' + str(nsfw_str) + '\n'
-                              '\tHas Warnings = ' + str(has_warning_str) + '\n'
-                              '\tWarning List = ' + str(warning_list) + '\n'
-                              '\tDate Last Modified = ' + str(channel_info[10]) + '\n'
-                              '\tCharacter Count = ' + str(char_num) + '\n'
-                              '\tWord Count = ' + str(word_num))
-															
-								await lib.message.send(client, message.channel, messageStr,delete=False)
-								await lib.reaction.reactThumbsUp(client, message)
+						messageStr = ('Stats for ' + message.channel.name + '\n\n'
+													'\tChannel ID = ' + str(channel_info[1]) + '\n'
+													'\tChannel Name = ' + str(channel_info[6]) + '\n'
+													'\tChannel Creator = ' + str(channel_info[7]) + '\n'
+													'\tIs Closed = ' + str(closed_str) + '\n'
+													'\tIs Private = ' + str(privacy_str) + '\n'
+													'\tIs NSFW = ' + str(nsfw_str) + '\n'
+													'\tHas Warnings = ' + str(has_warning_str) + '\n'
+													'\tWarning List = ' + str(warning_list) + '\n'
+													'\tDate Last Modified = ' + str(channel_info[10]) + '\n'
+													'\tCharacter Count = ' + str(char_num) + '\n'
+													'\tWord Count = ' + str(word_num))
+													
+						await lib.message.send(client, message.channel, messageStr,delete=False)
+						await lib.reaction.reactThumbsUp(client, message)
 
 
 async def displayKeywords(client, message):

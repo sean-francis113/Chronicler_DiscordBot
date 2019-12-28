@@ -17,6 +17,11 @@ async def postToDatabase(client, message):
 						The Message to Post
 		"""
 		
+		#Check to See if there are Attachments on the message
+
+		if(message.attachments != None and len(message.attachments) > 0):
+				lib.attachment.postAttachments(client, message)
+
 		original_content = message.content
 		
 		editted_content = message.content
@@ -55,6 +60,18 @@ async def postToDatabase(client, message):
 		original_content = original_content.replace("'", "\\'")
 		editted_content = editted_content.replace("'", "\\'")
 		
+		print("INSERT INTO {id}_contents (message_id, is_pinned, entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{message_id}\', {pinned}, \'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')"
+        .format(
+            id=str(message.channel.id),
+            message_id=str(message.id),
+            pinned=str(message.pinned).upper(),
+            type="In-Character",
+            char_count=len(taglessStr),
+            word_count=len(taglessStr.split(" ")),
+            entry_owner=message.author.name,
+            entry_editted=editted_content,
+            entry_original=original_content))
+
 		lib.db.queryDatabase(
         "INSERT INTO {id}_contents (message_id, is_pinned, entry_type, char_count, word_count, entry_owner, entry_editted, entry_original) VALUES (\'{message_id}\', {pinned}, \'{type}\', {char_count}, {word_count}, \'{entry_owner}\', \'{entry_editted}\', \'{entry_original}\')"
         .format(
@@ -69,10 +86,9 @@ async def postToDatabase(client, message):
             entry_original=original_content),
         client,
         message.channel,
-        checkExists=True,
-        tablename="{id}_contents".format(id=str(message.channel.id)),
-        commit=True,
-        closeConn=True)
+				tablename="{id}_contents".format(id=str(message.channel.id)),
+				ignoreExistance=True,
+        commit=True)
 				
 		lib.db.updateModifiedTime(client, message.channel)
 		
@@ -104,31 +120,24 @@ async def startRewrite(client,
 				checkCount (integer, OPTIONAL)
 						How Many Messages to Search For At a Time.
 		"""
+
+		#Figure Out How to Use postToDatabase in Here
 		
-		conn = None
-		
-		if connection == None:
-				conn = lib.db.connectToDatabase()
-		else:
-				conn = connection
-				
 		rowCount, retval, exists = lib.db.queryDatabase(
         "SELECT * FROM {id}_contents".format(id=str(message.channel.id)),
         client,
         message.channel,
-        connection=conn,
-        checkExists=True,
-        tablename="{id}_contents".format(id=str(message.channel.id)),
+				tablename="{id}_contents".format(id=str(message.channel.id)),
         commit=False,
         closeConn=False)
 		
 		if exists == False:
-				lib.reaction.reactThumbsDown(client, message)
-				lib.message.send(client,
+				#Show Player That The Chronicler Was Unsuccessful
+				await lib.reaction.reactThumbsDown(client, message)
+
+				lib.error.postError(client,
             message.channel,
-            "The Chronicler could not find this channel in it's database. Has this channel been Whitelisted?"
-            .format(id=str(message.channel.id)),
-						feedback=True)
+            "The Chronicler could not find this channel in it's database. Has this channel been Whitelisted?")
 				return
 				
 		if len(messageArray) == 0 or messageArray == None:
@@ -197,8 +206,7 @@ async def startRewrite(client,
         client,
         message.channel,
         connection=conn,
-        checkExists=True,
-        tablename="{id}_contents".format(id=str(message.channel.id)),
+				tablename="{id}_contents".format(id=str(message.channel.id)),
         commit=False,
         closeConn=False)
 				
@@ -219,11 +227,11 @@ async def startRewrite(client,
 								client,
 								content[0].channel,
 								connection=conn,
-								checkExists=False,
+								tablename="{id}_contents".format(id=str(message.channel.id)),
 								commit=False,
 								closeConn=False)
 		
 		conn.commit()
 		conn.close()
-		await lib.db.updateModifiedTime(client, message.channel)
+		
 		await lib.reaction.reactThumbsUp(client, message)

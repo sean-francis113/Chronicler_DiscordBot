@@ -59,9 +59,23 @@ async def createChroniclerChannel(client, message, createNew=True):
         embed_links=True,
         attach_files=True,
         mention_everyone=True)
+		bot_perms = discord.PermissionOverwrite(
+				administrator=True)
 		showWelcomeMessage = True
 		showHelpMessage = True
 		willRewrite = False
+
+		if(createNew is False):			
+			check_result = lib.db.checkIfDataExists(client, message.channel, "chronicles_info", channel_id=message.channel.id)
+
+			if(int(check_result["channel_id"]) > 0):
+
+					#Show Player That The Chronicler Was Unsuccessful
+					await lib.reaction.reactThumbsDown(client, message)
+
+					lib.error.postError(client, message.channel, "This Channel's ID is already in the Chronicler's Database.")
+
+					return
 		
 		#Parse out options, if any
 		channelOptionsStr = message.content.replace(
@@ -196,7 +210,7 @@ async def createChroniclerChannel(client, message, createNew=True):
 		#Set Channel Permissions
 		await chroniclerChannel.set_permissions(message.channel.guild.default_role, overwrite=everyone_perms)
 		await chroniclerChannel.set_permissions(message.author, overwrite=user_perms)
-		await chroniclerChannel.set_permissions(client.user, overwrite=user_perms)
+		await chroniclerChannel.set_permissions(client.user, overwrite=bot_perms)
 		
 		#Connect to Database
 		conn = lib.db.connectToDatabase()
@@ -208,28 +222,68 @@ async def createChroniclerChannel(client, message, createNew=True):
         client,
         message.channel,
         connection=conn,
-        checkExists=False,
+				tablename="{id}_contents".format(id=str(chroniclerChannel.id)),
+				ignoreExistance=True,
+        closeConn=False)
+		lib.db.queryDatabase(
+        "ALTER TABLE {id}_contents CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        .format(id=str(chroniclerChannel.id)),
+        client,
+        message.channel,
+        connection=conn,
+				tablename="{id}_contents".format(id=str(chroniclerChannel.id)),
+				ignoreExistance=True,
         closeConn=False)
 		lib.db.queryDatabase(
         "CREATE TABLE {id}_keywords (kw_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, word TEXT NOT NULL, replacement TEXT NOT NULL)"
         .format(id=str(chroniclerChannel.id)),
         client,
         message.channel,
-        checkExists=False,
+				tablename="{id}_keywords".format(id=str(chroniclerChannel.id)),
+				ignoreExistance=True,
+        closeConn=False)
+		lib.db.queryDatabase(
+        "ALTER TABLE {id}_keywords CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        .format(id=str(chroniclerChannel.id)),
+        client,
+        message.channel,
+        connection=conn,
+				tablename="{id}_keywords".format(id=str(chroniclerChannel.id)),
+				ignoreExistance=True,
         closeConn=False)
 		lib.db.queryDatabase(
         "CREATE TABLE {id}_ignoredUsers (iu_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, name TEXT NOT NULL, id TEXT NOT NULL)"
         .format(id=str(chroniclerChannel.id)),
         client,
         message.channel,
-        checkExists=False,
+				tablename="{id}_ignoredUsers".format(id=str(chroniclerChannel.id)),
+				ignoreExistance=True,
+        closeConn=False)
+		lib.db.queryDatabase(
+        "ALTER TABLE {id}_ignoredUsers CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        .format(id=str(chroniclerChannel.id)),
+        client,
+        message.channel,
+        connection=conn,
+				tablename="{id}_ignoredUsers".format(id=str(chroniclerChannel.id)),
+				ignoreExistance=True,
         closeConn=False)
 		lib.db.queryDatabase(
         "CREATE TABLE {id}_ignoredSymbols (is_id INT AUTO_INCREMENT PRIMARY KEY, start VARCHAR(50) NOT NULL, end VARCHAR(50) NOT NULL)"
         .format(id=str(chroniclerChannel.id)),
         client,
         message.channel,
-        checkExists=False,
+				tablename="{id}_ignoredSymbols".format(id=str(chroniclerChannel.id)),
+				ignoreExistance=True,
+        closeConn=False)
+		lib.db.queryDatabase(
+        "ALTER TABLE {id}_ignoredSymbols CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        .format(id=str(chroniclerChannel.id)),
+        client,
+        message.channel,
+        connection=conn,
+				tablename="{id}_ignoredSymbols".format(id=str(chroniclerChannel.id)),
+				ignoreExistance=True,
         closeConn=False)
 				
 		#Add New Channel Into chronicles_info
@@ -245,9 +299,7 @@ async def createChroniclerChannel(client, message, createNew=True):
             warn_list=warnings,
             datetime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         client,
-        message.channel,
-        checkExists=True,
-        tablename="chronicles_info",
+        message.channel,tablename="chronicles_info",
         commit=True,
         closeConn=False)
 
@@ -263,8 +315,7 @@ async def createChroniclerChannel(client, message, createNew=True):
                 client,
                 message.channel,
                 connection=conn,
-                checkExists=True,
-                tablename="{id}_keywords".format(id=str(chroniclerChannel.id)),
+								tablename="{id}_keywords".format(id=str(chroniclerChannel.id)),
                 commit=False,
                 closeConn=False)
 					conn.commit()
@@ -281,8 +332,7 @@ async def createChroniclerChannel(client, message, createNew=True):
                 client,
                 message.channel,
                 connection=conn,
-                checkExists=True,
-                tablename="{id}_ignoredUsers".format(id=str(chroniclerChannel.id)),
+								tablename="{id}_ignoredUsers".format(id=str(chroniclerChannel.id)),
                 commit=False,
                 closeConn=False)
 				conn.commit()
@@ -299,8 +349,7 @@ async def createChroniclerChannel(client, message, createNew=True):
                 client,
                 message.channel,
                 connection=conn,
-                checkExists=True,
-                tablename="{id}_ignoredSymbols".format(
+								tablename="{id}_ignoredSymbols".format(
                     id=str(chroniclerChannel.id)),
                 commit=False,
                 closeConn=False)

@@ -1,4 +1,5 @@
 import asyncio
+import lib.settings
 
 
 async def reactThumbsUp(client, message):

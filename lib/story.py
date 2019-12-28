@@ -20,8 +20,7 @@ async def closeStory(client, message):
         format(id=str(message.channel.id)),
         client,
         message.channel,
-        checkExists=True,
-        tablename="chronicles_info",
+				tablename="chronicles_info",
         commit=True,
         closeConn=True)
 		
@@ -45,8 +44,7 @@ async def openStory(client, message):
         .format(id=str(message.channel.id)),
         client,
         message.channel,
-        checkExists=True,
-        tablename="chronicles_info",
+				tablename="chronicles_info",
         commit=True,
         closeConn=True)
 
@@ -107,8 +105,7 @@ def editChronicle(client, message):
         client,
         message.channel,
         connection=connection,
-        checkExists=True,
-        tablename="{id}_contents".format(id=str(message.channel.id)),
+				tablename="{id}_contents".format(id=str(message.channel.id)),
         getResult=True,
         closeConn=False)
 		
@@ -158,6 +155,7 @@ def editChronicle(client, message):
                 client,
                 message.channel,
                 connection=connection,
+								tablename="{id}_contents".format(id=str(message.channel.id)),
                 commit=True,
                 closeConn=True)
 

@@ -31,7 +31,6 @@ async def addSymbol(client, message):
 						client,
 						message.channel,
 						connection=conn,
-						checkExists=False,
 						tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
 						commit=True,
 						closeConn=True)
@@ -45,7 +44,6 @@ async def addSymbol(client, message):
 						client,
 						message.channel,
 						connection=conn,
-						checkExists=False,
 						tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
 						commit=True,
 						closeConn=True)
@@ -75,8 +73,7 @@ async def removeSymbol(client, message):
         client,
         message.channel,
         connection=conn,
-        checkExists=True,
-        tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
+				tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
         getResult=True,
         closeConn=False)
 
@@ -92,16 +89,20 @@ async def removeSymbol(client, message):
                 client,
                 message.channel,
                 connection=conn,
-                checkExists=False,
-                commit=True,
+								tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
+								commit=True,
                 closeConn=True)
+
 						await lib.reaction.reactThumbsUp(client, message)
 						
 				elif rowCount == 0:
+
+						#Show Player That The Chronicler Was Unsuccessful
 						await lib.reaction.reactThumbsDown(client, message)
-						await lib.message.send(client, message.channel,
-                "The Chronicler could not find the symbol in its database for this channel.",
-								feedback=True
+
+						lib.error.postError(client,
+								message.channel,
+                "The Chronicler could not find the symbol in its database for this channel."
             )
 
 def replaceMarkdown(string):
@@ -144,32 +145,38 @@ def replaceMarkdown(string):
 		# First Check for Spoilers
 		for symbol in spoilerSymbols:
 				lastPosChecked = 0
-				while spoilerString.find(symbol[0], lastPosChecked + 1) != -1:
-						firstIndex = spoilerString.find(symbol[0])
-						nextIndex = spoilerString.find(symbol[0], firstIndex + len(symbol[0]))
+				mdSymbol = symbol[0]
+				htmlSymbolLeft = symbol[1]
+				htmlSymbolRight = symbol[2]
+				while spoilerString.find(mdSymbol, lastPosChecked + 1) != -1:
+						firstIndex = spoilerString.find(mdSymbol)
+						nextIndex = spoilerString.find(mdSymbol, firstIndex + len(mdSymbol))
 						lastPosChecked = firstIndex
 						if nextIndex != -1:
-								lastPosChecked = nextIndex + len(symbol[0])
+								lastPosChecked = nextIndex + len(mdSymbol)
 								spoilerStart.append(firstIndex)
 								spoilerEnd.append(nextIndex)
-								insideString = spoilerString[firstIndex + len(symbol[0]) : nextIndex]
-								spoilerString = spoilerString[ : firstIndex] + symbol[1] + insideString + symbol[2] + spoilerString[nextIndex + len(symbol[0]) : ]
+								insideString = spoilerString[firstIndex + len(mdSymbol) : nextIndex]
+								spoilerString = spoilerString[ : firstIndex] + symbol[1] + insideString + symbol[2] + spoilerString[nextIndex + len(mdSymbol) : ]
 
 		codeString = spoilerString
 
 		#Then Check Codeblocks
 		for symbol in codeSymbols:
 				lastPosChecked = 0
+				mdSymbol = symbol[0]
+				htmlSymbolLeft = symbol[1]
+				htmlSymbolRight = symbol[2]
 				#Run Functions for Multiline Code Blocks
-				while codeString.find(symbol[0], lastPosChecked + 1) != -1:
-						firstIndex = codeString.find(symbol[0])
-						nextIndex = codeString.find(symbol[0], firstIndex + len(symbol[0]))
+				while codeString.find(mdSymbol, lastPosChecked + 1) != -1:
+						firstIndex = codeString.find(mdSymbol)
+						nextIndex = codeString.find(mdSymbol, firstIndex + len(mdSymbol))
 						lastPosChecked = firstIndex
 						if nextIndex != -1:
-								lastPosChecked = nextIndex + len(symbol[0])
+								lastPosChecked = nextIndex + len(mdSymbol)
 								if len(spoilerStart) == 0 or len(spoilerEnd) == 0:
-										insideString = codeString[firstIndex + len(symbol[0]) : nextIndex]
-										codeString = codeString[:firstIndex] + symbol[1] + insideString + symbol[2] + codeString[nextIndex + len(symbol[0]):]
+										insideString = codeString[firstIndex + len(mdSymbol) : nextIndex]
+										codeString = codeString[:firstIndex] + symbol[1] + insideString + symbol[2] + codeString[nextIndex + len(mdSymbol):]
 								else:
 										i = 0
 										validSpot = False
@@ -182,24 +189,27 @@ def replaceMarkdown(string):
 														i += 1
 
 										if validSpot == True:
-												insideString = codeString[firstIndex + len(symbol[0]) : nextIndex]
-												codeString = codeString[:firstIndex] + symbol[1] + insideString + symbol[2] + codeString[nextIndex + len(symbol[0]):]
+												insideString = codeString[firstIndex + len(mdSymbol) : nextIndex]
+												codeString = codeString[:firstIndex] + symbol[1] + insideString + symbol[2] + codeString[nextIndex + len(mdSymbol):]
 
 		markdownString = codeString
 
 		#Finally Check Remaining Markdown
 		for symbol in markdownSymbols:
 				lastPosChecked = 0
-				while markdownString.find(symbol[0], lastPosChecked + 1) != -1:
-						firstIndex = markdownString.find(symbol[0])
-						nextIndex = markdownString.find(symbol[0], firstIndex + len(symbol[0]))
+				mdSymbol = symbol[0]
+				htmlSymbolLeft = symbol[1]
+				htmlSymbolRight = symbol[2]
+				while markdownString.find(mdSymbol, lastPosChecked + 1) != -1:
+						firstIndex = markdownString.find(mdSymbol)
+						nextIndex = markdownString.find(mdSymbol, firstIndex + len(mdSymbol))
 						lastPosChecked = firstIndex
 						i = 0
 						if nextIndex != -1:
-							lastPosChecked = nextIndex + len(symbol[0])
+							lastPosChecked = nextIndex + len(mdSymbol)
 							if len(codeStart) == 0 or len(codeEnd) == 0:
-									insideString = markdownString[firstIndex + len(symbol[0]) : nextIndex]
-									markdownString = markdownString[:firstIndex] + symbol[1] + insideString + symbol[2] + markdownString[nextIndex + len(symbol[0]):]
+									insideString = markdownString[firstIndex + len(mdSymbol) : nextIndex]
+									markdownString = markdownString[:firstIndex] + symbol[1] + insideString + symbol[2] + markdownString[nextIndex + len(mdSymbol):]
 							else:
 								while i < len(codeStart) and i < len(codeEnd):
 										#If Either symbol is Within the specified Code Block
@@ -209,8 +219,8 @@ def replaceMarkdown(string):
 										else:		
 												if i == len(codeStart) or i == len(codeEnd):
 														
-														insideString = markdownString[firstIndex + len(symbol[0]) : nextIndex]
-														markdownString = markdownString[:firstIndex] + symbol[1] + insideString + symbol[2] + markdownString[nextIndex + len(symbol[0]):]
+														insideString = markdownString[firstIndex + len(mdSymbol) : nextIndex]
+														markdownString = markdownString[:firstIndex] + symbol[1] + insideString + symbol[2] + markdownString[nextIndex + len(mdSymbol):]
 														
 														break
 												else:
@@ -265,8 +275,7 @@ def getSymbols(client, channel):
         "SELECT start,end FROM {id}_ignoredSymbols".format(id=channel.id),
         client,
         channel,
-        checkExists=True,
-        tablename="{id}_ignoredSymbols".format(id=channel.id),
+				tablename="{id}_ignoredSymbols".format(id=channel.id),
         getResult=True,
         closeConn=True)
 				
@@ -280,9 +289,10 @@ def getSymbols(client, channel):
 
 async def clearList(client, message):
 		lib.db.queryDatabase(
-                "DELETE FROM {id}_keywords".format(
+                "DELETE FROM {id}_ignoreSymbols".format(
                     id=str(message.channel.id)),
                 client,
-                message.channel, checkExists=False,
+                message.channel, 
                 commit=False,
+								tablename="{id}_ignoredSymbols".format(id=str(message.channel.id)),
 								closeConn=True)

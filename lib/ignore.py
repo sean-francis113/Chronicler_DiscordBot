@@ -80,7 +80,7 @@ async def addUserToIgnoreList(client, message):
 								message.channel,
 								connection=conn,
 								commit=False,
-								checkExists=True,
+								
 								tablename="{channel_id}_ignoredUsers".format(
 										channel_id=str(message.channel.id)),
 								closeConn=False)
@@ -121,7 +121,7 @@ async def removeIgnoredUsers(client, message):
         message.channel,
         connection=conn,
         commit=False,
-        checkExists=True,
+        
         tablename="{channel_id}_ignoredUsers".format(channel_id=str(message.channel.id)),
         reportExistance=True,
         getResult=False,
@@ -184,7 +184,7 @@ def getIgnoredUsers(client, channel):
         "SELECT name,id FROM {id}_ignoredUsers".format(id=channel.id),
         client,
         channel,
-        checkExists=True,
+        
         tablename="{id}_ignoredUsers".format(id=channel.id),
         getResult=True,
         closeConn=True)
